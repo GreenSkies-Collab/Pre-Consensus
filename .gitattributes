@@ -1,0 +1,10 @@
+# Normalise line endings so a Windows checkout and a Linux CI runner produce
+# byte-identical builds.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+
+# GitHub's language stats would otherwise call this an HTML project, because
+# the one 180 KB app.html outweighs everything else. The substance is the
+# dataset and the scoring logic.
+docs/** linguist-documentation
+src/data/*.js linguist-detectable=true linguist-language=JavaScript

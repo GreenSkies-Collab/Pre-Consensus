@@ -1,0 +1,24 @@
+# Build output — regenerate with ./build.ps1, never commit.
+# The built file is a 420 KB single-file bundle; committing it would make every
+# data change look like a 420 KB diff and bury the actual edit.
+build/
+
+# Previously committed and now deliberately excluded:
+#   dist/                   stale copies of the build output
+#   founder-radar*.zip      hand-made archives, superseded by git
+
+# Local tool config — machine-specific permissions, not project settings.
+# CLAUDE.md is committed deliberately: it documents the project's conventions.
+.claude/settings.local.json
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# OneDrive sync artefacts (this project lives in a synced folder)
+*.~*
+~$*

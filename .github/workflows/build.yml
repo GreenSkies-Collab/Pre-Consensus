@@ -1,0 +1,81 @@
+name: Build and deploy
+
+# Every push rebuilds the dashboard from source and checks the result actually
+# parses. The build is a text concatenation, so the failure mode is a dataset
+# edit producing a syntactically invalid bundle — which renders as a blank page
+# rather than an error. That has happened, so it is checked here explicitly.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # pwsh is preinstalled on GitHub runners, so build.ps1 runs unchanged.
+      - name: Build
+        shell: pwsh
+        run: ./build.ps1
+
+      - name: Check the bundle parses
+        shell: pwsh
+        run: |
+          $html = Get-Content build/index.html -Raw
+
+          # The dataset is injected into the last <script> block. If a data edit
+          # leaves unbalanced brackets, node -c catches it here instead of the
+          # page silently rendering empty.
+          if ($html -notmatch '(?s)<script>(.*)</script>\s*$') {
+            throw "Could not locate the application script block in the build output."
+          }
+          $script = $Matches[1]
+          $probe = Join-Path $env:RUNNER_TEMP 'bundle-probe.js'
+          Set-Content -Path $probe -Value $script -Encoding utf8
+
+          node --check $probe
+          Write-Host "Bundle parses cleanly."
+
+          # Guard against a silently empty build: the real bundle is ~420 KB.
+          $kb = [math]::Round((Get-Item build/index.html).Length / 1KB)
+          if ($kb -lt 300) { throw "Build is only $kb KB - a data layer is probably missing." }
+          Write-Host "Build size $kb KB."
+
+      - name: Report dataset size
+        shell: pwsh
+        run: |
+          # Surfaced in the job log so a dataset change shows its effect without
+          # anyone having to open the diff.
+          Get-ChildItem src/data/*.js | ForEach-Object {
+            $lines = (Get-Content $_.FullName | Measure-Object -Line).Lines
+            "{0,-16} {1,6} lines  {2,5} KB" -f $_.Name, $lines, [math]::Round($_.Length/1KB)
+          }
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: build
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

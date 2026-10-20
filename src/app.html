@@ -1,0 +1,3079 @@
+<title>Founder Radar — Where the Builders Are Putting Their Money</title>
+<style>
+/* ============================================================
+   FOUNDER RADAR
+   A signals console for private-market conviction.
+   Committed dark identity (per brief). Tokens are theme-stable so the
+   viewer's light toggle lifts the ground rather than inverting an
+   instrument panel into something unreadable.
+   ============================================================ */
+
+:root{
+  color-scheme: dark;
+
+  --ground:#080a12;
+  --ground-2:#0b0e18;
+  --panel:#0e1220;
+  --panel-2:#141a2c;
+  --panel-3:#1a2136;
+  --line:#1e2740;
+  --line-bright:#2c3958;
+
+  --ink:#e6ecff;
+  --ink-2:#aab6d8;
+  --ink-3:#9aa7cc;
+  --ink-4:#7c8ab4;
+
+  --signal:#f0a53c;
+  --signal-hot:#ffc670;
+  --signal-dim:rgba(240,165,60,.14);
+  --signal-line:rgba(240,165,60,.38);
+
+  --up:#5fd39a;
+  --warn:#e0a34f;
+  --crit:#e0654f;
+
+  --font-display:"Bahnschrift","DIN Alternate","Oswald","Arial Narrow",sans-serif;
+  --font-body:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  --font-mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,"SF Mono",monospace;
+
+  --rail:236px;
+  --pad:clamp(16px,2.4vw,32px);
+}
+:root[data-theme="light"]{
+  --ground:#0d111c; --ground-2:#111624; --panel:#151b2c; --panel-2:#1c2338; --ink:#f1f4ff;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+
+.app{
+  background:var(--ground); color:var(--ink);
+  font-family:var(--font-body); font-size:15px; line-height:1.55;
+  min-height:100vh; position:relative; overflow-x:hidden;
+}
+.app::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(120,150,220,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,150,220,.045) 1px,transparent 1px);
+  background-size:64px 64px;
+}
+.app::after{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(115% 75% at 78% -8%,rgba(240,165,60,.09),transparent 62%),
+             radial-gradient(90% 60% at 8% 105%,rgba(122,162,247,.07),transparent 60%);
+}
+.shell{position:relative;z-index:1}
+
+h1,h2,h3,h4,h5{margin:0;font-family:var(--font-display);font-weight:600;text-wrap:balance;font-variation-settings:"wdth" 90}
+.eyebrow{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)}
+
+/* ---------- masthead ---------- */
+.masthead{
+  border-bottom:1px solid var(--line); position:sticky; top:0; z-index:40;
+  background:linear-gradient(180deg,rgba(20,26,44,.92),rgba(8,10,18,.72));
+  backdrop-filter:blur(14px);
+}
+.masthead-in{display:flex;align-items:center;gap:var(--pad);padding:14px var(--pad);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand canvas{width:34px;height:34px;flex:none;border-radius:3px}
+.brand-txt h1{font-size:19px;letter-spacing:.04em;text-transform:uppercase;line-height:1.05}
+.brand-txt p{margin:1px 0 0;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;color:var(--ink-4);text-transform:uppercase}
+.readouts{display:flex;gap:26px;margin-left:auto;flex-wrap:wrap}
+.readout{display:flex;flex-direction:column;gap:1px;min-width:74px}
+.readout b{font-family:var(--font-mono);font-size:19px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1}
+.readout span{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-4)}
+.readout.hot b{color:var(--signal)}
+
+/* ---------- controls ----------
+   One quiet row by default. Filters live behind a toggle and only the
+   groups that affect the current view are shown at all — a permanent
+   23-chip bar read as a whole extra level of interface. */
+.controls{
+  padding:9px var(--pad); border-bottom:1px solid var(--line);
+  background:rgba(11,14,24,.75); position:sticky; top:var(--top-off,66px); z-index:39;
+  backdrop-filter:blur(14px);
+}
+.controls[hidden]{display:none}
+.ctrl-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ftoggle{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--ink-3);
+  padding:7px 11px;border-radius:2px;cursor:pointer;transition:.15s;
+}
+.ftoggle svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round}
+.ftoggle:hover{border-color:var(--line-bright);color:var(--ink)}
+.ftoggle[aria-expanded="true"]{border-color:var(--signal-line);color:var(--signal-hot);background:var(--signal-dim)}
+.ftoggle b{
+  font-family:var(--font-mono);font-size:10px;background:var(--signal);color:#0b0e18;
+  padding:0 5px;border-radius:8px;font-weight:700;
+}
+.ftoggle b:empty{display:none}
+.activepills{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.apill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;
+  background:var(--signal-dim);border:1px solid var(--signal-line);color:var(--signal-hot);
+  padding:4px 5px 4px 8px;border-radius:2px;cursor:pointer;
+}
+.apill:hover{background:rgba(240,165,60,.24)}
+.apill em{font-style:normal;color:var(--ink-4);font-size:9px;text-transform:uppercase;letter-spacing:.1em}
+.apill span{font-size:12px;line-height:1;opacity:.7}
+.fpanel{
+  display:flex;flex-direction:column;gap:10px;
+  margin-top:11px;padding-top:11px;border-top:1px solid var(--line);
+}
+.fpanel[hidden]{display:none}
+.search{position:relative;flex:1 1 200px;max-width:280px}
+.search input{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  font-family:var(--font-mono);font-size:12.5px;padding:8px 11px 8px 32px;border-radius:2px;
+  outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.search input::placeholder{color:var(--ink-4)}
+.search input:focus{border-color:var(--signal-line);box-shadow:0 0 0 3px var(--signal-dim)}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;stroke:var(--ink-4);fill:none;stroke-width:1.8}
+
+.fgroup[hidden]{display:none}
+.fgroup{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fgroup > .glabel{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-right:2px}
+.fchip{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--line);color:var(--ink-3);
+  padding:5px 9px;border-radius:2px;cursor:pointer;transition:.15s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.fchip:hover{border-color:var(--line-bright);color:var(--ink-2)}
+.fchip[aria-pressed="true"]{background:var(--signal-dim);border-color:var(--signal-line);color:var(--signal-hot)}
+.fchip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+/* square swatch = which theme/region/class, count = what pressing it yields */
+.fchip .swatch{width:8px;height:8px;border-radius:1px;flex:none}
+.fchip .cnt{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;font-variant-numeric:tabular-nums;
+  color:var(--ink-4);background:rgba(255,255,255,.05);padding:0 4px;border-radius:2px;margin-left:1px;
+}
+.fchip[aria-pressed="true"] .cnt{color:var(--signal-hot);background:rgba(240,165,60,.18)}
+.fsummary{
+  display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;width:100%;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;color:var(--ink-4);
+  border-top:1px solid var(--line);padding-top:9px;margin-top:2px;
+}
+.fsummary b{color:var(--ink-2);font-variant-numeric:tabular-nums;font-weight:600}
+.fsummary span{color:var(--ink-4)}
+.fsummary .fs-on{
+  color:var(--signal);border:1px solid var(--signal-line);background:var(--signal-dim);
+  padding:1px 6px;border-radius:2px;margin-left:auto;text-transform:uppercase;letter-spacing:.09em;font-size:9.5px;
+}
+.fsummary .fs-warn{
+  color:var(--warn);border:1px solid rgba(224,163,79,.4);padding:1px 6px;border-radius:2px;
+  text-transform:uppercase;letter-spacing:.09em;font-size:9.5px;cursor:help;
+}
+.clearbtn{
+  font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+  background:none;border:none;color:var(--ink-4);cursor:pointer;padding:5px 4px;
+  text-decoration:underline;text-underline-offset:3px;
+}
+.clearbtn:hover{color:var(--signal)}
+.fchip:focus-visible,.navlink:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+
+/* ---------- frame ---------- */
+.frame{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);align-items:start}
+.rail{
+  position:sticky;top:118px;padding:var(--pad) 0 var(--pad) var(--pad);
+  border-right:1px solid var(--line);min-height:calc(100vh - 118px);
+  display:flex;flex-direction:column;gap:20px;
+}
+.nav{display:flex;flex-direction:column;gap:1px}
+.navlink{
+  display:grid;grid-template-columns:22px 1fr;align-items:baseline;gap:9px;
+  padding:9px 12px 9px 8px;background:none;border:none;border-left:2px solid transparent;
+  color:var(--ink-3);cursor:pointer;text-align:left;width:100%;
+  font-family:var(--font-display);font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;
+  font-variation-settings:"wdth" 90;transition:.15s;
+}
+.navlink i{font-family:var(--font-mono);font-style:normal;font-size:9.5px;color:var(--ink-4)}
+.navlink:hover{color:var(--ink);background:rgba(255,255,255,.02)}
+.navlink[aria-selected="true"]{color:var(--signal);border-left-color:var(--signal);background:var(--signal-dim)}
+.navlink[aria-selected="true"] i{color:var(--signal)}
+.railnote{border-top:1px solid var(--line);padding:14px 14px 0 0;font-size:11.5px;line-height:1.5;color:var(--ink-4)}
+.railnote b{color:var(--ink-3);font-weight:600}
+.railnote .stamp{font-family:var(--font-mono);color:var(--signal);font-size:10.5px;letter-spacing:.06em;margin-top:10px;display:block}
+
+.stage{padding:var(--pad);min-width:0}
+.subtabs[hidden]{display:none}
+.subtabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.subtab{
+  font-family:var(--font-display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+  background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-3);
+  padding:8px 14px;cursor:pointer;transition:.15s;font-variation-settings:"wdth" 92;margin-bottom:-1px;
+}
+.subtab:hover{color:var(--ink)}
+.subtab[aria-pressed="true"]{color:var(--signal);border-bottom-color:var(--signal)}
+.view{display:none}
+.view.on{display:block;animation:fade .32s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.viewhead{margin-bottom:22px;max-width:78ch}
+.viewhead h2{font-size:clamp(22px,2.6vw,30px);letter-spacing:.02em;margin:5px 0 7px}
+.viewhead p{margin:0;color:var(--ink-3);font-size:14px;line-height:1.6}
+.viewhead p + p{margin-top:9px}
+.viewhead b{color:var(--ink-2);font-weight:600}
+
+/* ---------- brief ---------- */
+.brief{max-width:1180px}
+.brief-hero{border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:26px}
+.brief-hero .eyebrow{display:block;margin-bottom:14px}
+.brief-hero h2{
+  font-size:clamp(30px,4.6vw,54px);line-height:1.02;letter-spacing:.005em;
+  max-width:19ch;margin-bottom:18px;font-variation-settings:"wdth" 85;
+}
+.brief-hero h2 em{font-style:normal;color:var(--signal)}
+.lede{margin:0;font-size:clamp(15px,1.5vw,18px);line-height:1.6;color:var(--ink-2);max-width:62ch}
+
+.brief-stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);border-radius:2px;
+  margin-bottom:32px;overflow:hidden;
+}
+.bstat{background:var(--panel);padding:15px 16px}
+.bstat b{display:block;font-family:var(--font-mono);font-size:clamp(22px,2.6vw,30px);font-variant-numeric:tabular-nums;line-height:1.05;letter-spacing:-.015em}
+.bstat span{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-4);margin-top:5px}
+.bstat i{display:block;font-style:normal;font-size:11.5px;color:var(--ink-3);margin-top:6px;line-height:1.45}
+
+.brief-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:34px;align-items:start}
+.brief-main > section{margin-bottom:28px}
+.brief-main h3{
+  font-size:14px;letter-spacing:.11em;text-transform:uppercase;color:var(--signal);
+  margin-bottom:11px;font-variation-settings:"wdth" 92;
+}
+.brief-main p{margin:0 0 11px;font-size:14.5px;line-height:1.68;color:var(--ink-2);max-width:66ch}
+.brief-main p:last-child{margin-bottom:0}
+.brief-main b{color:var(--ink);font-weight:600}
+.brief-main .num{font-family:var(--font-mono);color:var(--signal);font-variant-numeric:tabular-nums}
+
+.hcards{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.hcard{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;
+  padding:13px 15px;border:1px solid var(--line);border-left:3px solid var(--hue);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--hue) 8%,transparent),transparent 46%),var(--panel);
+  border-radius:2px;cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%;
+  transition:border-color .15s,transform .15s;
+}
+.hcard:hover{border-color:color-mix(in srgb,var(--hue) 68%,#fff);transform:translateX(2px)}
+.hcard .hpos{font-family:var(--font-mono);font-size:19px;color:color-mix(in srgb,var(--hue) 68%,#fff);font-variant-numeric:tabular-nums;font-weight:600}
+.hcard .hn{font-family:var(--font-display);font-size:15px;letter-spacing:.045em;text-transform:uppercase;color:color-mix(in srgb,var(--hue) 68%,#fff);font-variation-settings:"wdth" 90;display:block;margin-bottom:3px}
+.hcard .hd{font-size:12.5px;color:var(--ink-3);line-height:1.45;display:block}
+.hcard .hm{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);white-space:nowrap;text-align:right;line-height:1.6}
+.hcard .hm b{display:block;color:var(--ink-2);font-size:12px}
+
+.findings{border:1px solid var(--line);background:var(--panel);border-radius:2px;overflow:hidden}
+.findings > .eyebrow{display:block;padding:13px 15px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+.finding{padding:13px 15px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:26px minmax(0,1fr);gap:11px}
+.finding:last-child{border-bottom:none}
+.finding .fi{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);padding-top:2px}
+.finding p{margin:0;font-size:13px;line-height:1.6;color:var(--ink-3)}
+.finding p b{color:var(--ink-2);font-weight:600}
+.finding p .hot{color:var(--signal);font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+.brief-nav{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:9px;margin-top:34px;padding-top:26px;border-top:1px solid var(--line)}
+.bnav{
+  padding:12px 14px;border:1px solid var(--line);background:var(--panel);border-radius:2px;
+  cursor:pointer;text-align:left;color:inherit;font:inherit;transition:.15s;
+}
+.bnav:hover{border-color:var(--signal-line);background:var(--panel-2)}
+.bnav b{display:block;font-family:var(--font-display);font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);margin-bottom:4px;font-variation-settings:"wdth" 90}
+.bnav span{font-size:12px;color:var(--ink-4);line-height:1.45}
+
+@media (max-width:900px){ .brief-grid{grid-template-columns:1fr;gap:26px} }
+
+.brief-atlas{margin:34px 0 0;padding-top:26px;border-top:1px solid var(--line)}
+.brief-atlas .viewhead{margin-bottom:16px}
+.brief-atlas .viewhead h2{font-size:clamp(18px,2vw,22px)}
+.brief-sectors{margin:6px 0 30px;padding-top:26px;border-top:1px solid var(--line)}
+.brief-sectors h3{font-size:14px;letter-spacing:.11em;text-transform:uppercase;color:var(--signal);margin-bottom:11px;font-variation-settings:"wdth" 92}
+.brief-sectors > p{margin:0 0 16px;font-size:14.5px;line-height:1.68;color:var(--ink-2);max-width:66ch}
+.lsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:9px;margin:14px 0 12px}
+.lscard{
+  display:flex;flex-direction:column;gap:4px;padding:12px 13px;text-align:left;font:inherit;color:inherit;
+  background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--hue);
+  border-radius:2px;cursor:pointer;transition:.15s;
+}
+.lscard:hover{background:var(--panel-2);border-color:var(--line-bright);border-left-color:var(--hue)}
+.lst{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.11em;text-transform:uppercase;color:color-mix(in srgb,var(--hue) 68%,#fff)}
+.lsn{font-size:14px;font-weight:600;line-height:1.2}
+.lsd{font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.lsw{font-family:var(--font-mono);font-size:10px;color:var(--up);letter-spacing:.03em;margin-top:2px}
+.lsnote{margin:0;font-size:12.5px;line-height:1.62;color:var(--ink-3);max-width:88ch;border-left:2px solid var(--warn);padding-left:12px}
+.lsnote b{color:var(--warn)}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:24px}
+.scard{border:1px solid var(--line);border-top:2px solid var(--sc);background:var(--panel);border-radius:2px;padding:13px 15px;text-align:left;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:7px;transition:.15s}
+.scard:hover{background:var(--panel-2);border-color:var(--line-bright);border-top-color:var(--sc)}
+.sn{font-family:var(--font-display);font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--sc) 68%,#fff);font-variation-settings:"wdth" 90}
+.sm{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-4);font-variant-numeric:tabular-nums}
+.sm b{color:var(--ink-2)}
+.sd{font-size:12.5px;line-height:1.55;color:var(--ink-3)}
+.sth{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.05em;color:var(--ink-4);border-top:1px solid var(--line);padding-top:7px}
+.gaps{border:1px dashed var(--line-bright);border-radius:2px;padding:14px 16px;background:rgba(255,255,255,.014)}
+.gaps > .eyebrow{display:block;margin-bottom:11px}
+.gap{display:grid;grid-template-columns:minmax(120px,168px) minmax(0,1fr);gap:14px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.045)}
+.gap:last-of-type{border-bottom:none}
+.gap b{font-family:var(--font-display);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);font-variation-settings:"wdth" 90}
+.gap span{font-size:12.5px;line-height:1.55;color:var(--ink-3)}
+.gapnote{margin:12px 0 0;padding-top:11px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.6;color:var(--ink-3);max-width:80ch}
+@media (max-width:640px){ .gap{grid-template-columns:1fr;gap:3px} }
+
+/* ---------- radar bands ---------- */
+.bands{display:flex;flex-direction:column;gap:11px}
+.band{
+  border:1px solid var(--line);border-left:3px solid var(--hue);border-radius:2px;overflow:hidden;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--hue) 7%,transparent),transparent 42%),var(--panel);
+}
+.band-head{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;
+  padding:14px 16px;cursor:pointer;width:100%;background:none;border:none;text-align:left;
+  color:inherit;font:inherit;
+}
+.band-head:hover{background:rgba(255,255,255,.02)}
+.band-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.band-title h3{font-size:17px;letter-spacing:.045em;text-transform:uppercase;color:var(--hue)}
+.band-rank{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-4);border:1px solid var(--line);padding:2px 6px;border-radius:2px}
+.emtag{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 6px;border-radius:2px;border:1px solid;
+}
+.emtag.early{color:var(--up);border-color:rgba(95,211,154,.45);background:rgba(95,211,154,.1)}
+.emtag.mid{color:var(--warn);border-color:rgba(224,163,79,.4);background:rgba(224,163,79,.09)}
+.emtag.late{color:var(--ink-4);border-color:var(--line)}
+.band-sub{margin:6px 0 0;font-size:13px;color:var(--ink-3);line-height:1.55;max-width:70ch}
+.band-metrics{display:flex;gap:20px;align-items:flex-start}
+.metric{text-align:right}
+.metric b{display:block;font-family:var(--font-mono);font-size:16px;font-variant-numeric:tabular-nums;line-height:1.2}
+.metric span{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4)}
+.conv{display:flex;gap:2px;margin-top:6px;justify-content:flex-end;flex-wrap:wrap;max-width:120px}
+.conv i{width:4px;height:14px;background:var(--line);border-radius:1px;display:block}
+.conv i.on{background:var(--hue)}
+.band-body{display:none;padding:0 16px 16px;border-top:1px solid var(--line)}
+.band.open .band-body{display:block;padding-top:14px}
+.band.open .band-head{background:rgba(255,255,255,.02)}
+.chevron{transition:transform .2s;flex:none;stroke:var(--ink-4);fill:none;stroke-width:2;width:13px;height:13px}
+.band.open .chevron{transform:rotate(180deg)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:11px}
+
+/* ---------- venture card ---------- */
+.vcard{
+  display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;padding:12px;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:2px;
+  cursor:pointer;text-align:left;color:inherit;font:inherit;position:relative;
+  transition:border-color .16s,transform .16s,background .16s;
+}
+.vcard:hover{border-color:color-mix(in srgb,var(--hue) 68%,#fff);background:var(--panel-3);transform:translateY(-1px)}
+.vcard canvas{width:52px;height:52px;border-radius:2px;background:var(--ground-2);flex:none}
+.vcard-b{min-width:0}
+.vcard h4{font-size:14.5px;letter-spacing:.03em;line-height:1.2;margin-bottom:3px}
+.vcard .tag{font-size:11.5px;color:var(--ink-3);line-height:1.4;display:block;margin-bottom:7px}
+.vrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.val{font-family:var(--font-mono);font-size:12px;font-weight:600;color:color-mix(in srgb,var(--hue) 68%,#fff);font-variant-numeric:tabular-nums}
+.stagechip{font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4);border:1px solid var(--line);padding:1.5px 5px;border-radius:2px}
+.stagechip.reported{color:var(--warn);border-color:rgba(224,163,79,.4)}
+.builtchip{font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--up);border:1px solid rgba(95,211,154,.4);background:rgba(95,211,154,.09);padding:1.5px 5px;border-radius:2px}
+.faces{display:flex;margin-top:8px}
+.face{
+  width:21px;height:21px;border-radius:50%;background:var(--panel-3);border:1px solid var(--line);
+  margin-left:-5px;display:grid;place-items:center;
+  font-family:var(--font-mono);font-size:8.5px;font-weight:600;color:var(--ink-2);
+}
+.face:first-child{margin-left:0}
+.face.more{background:var(--signal-dim);border-color:var(--signal-line);color:var(--signal)}
+
+/* ---------- HORIZON verdict ---------- */
+.verdict{
+  border:1px solid rgba(95,211,154,.32);border-left:3px solid var(--up);
+  background:linear-gradient(90deg,rgba(95,211,154,.08),transparent 55%),var(--panel);
+  border-radius:2px;padding:15px 17px;margin-bottom:16px;
+}
+.verdict .eyebrow{display:block;color:var(--up);margin-bottom:8px}
+.verdict-list{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:10px}
+.vpill{
+  display:flex;align-items:baseline;gap:8px;padding:7px 11px;border-radius:2px;
+  background:color-mix(in srgb,var(--hue) 13%,transparent);
+  border:1px solid color-mix(in srgb,var(--hue) 38%,transparent);
+  cursor:pointer;color:inherit;font:inherit;text-align:left;
+}
+.vpill:hover{background:color-mix(in srgb,var(--hue) 22%,transparent)}
+.vpill b{font-family:var(--font-display);font-size:14px;letter-spacing:.045em;text-transform:uppercase;color:color-mix(in srgb,var(--hue) 68%,#fff);font-variation-settings:"wdth" 90}
+.vpill span{font-family:var(--font-mono);font-size:10px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.verdict p{margin:0;font-size:13px;line-height:1.6;color:var(--ink-3);max-width:82ch}
+.verdict p b{color:var(--ink-2)}
+
+/* ---------- HORIZON quadrant ---------- */
+.quad-wrap{border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:16px;margin-bottom:22px}
+.quad{
+  position:relative;height:clamp(400px,52vh,560px);
+  border:1px solid var(--line);border-radius:2px;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px) 0 0/10% 100%,
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px) 0 0/100% 10%,
+    linear-gradient(135deg,rgba(95,211,154,.05),transparent 55%),
+    var(--ground-2);
+  overflow:hidden;
+}
+.qsplit{position:absolute;background:var(--line-bright)}
+.qsplit.v{top:0;bottom:0;width:1px}
+.qsplit.h{left:0;right:0;height:1px}
+.qlabel{
+  position:absolute;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-4);pointer-events:none;max-width:34%;line-height:1.5;
+}
+.qlabel b{display:block;font-size:11px;letter-spacing:.11em;margin-bottom:2px}
+.qlabel.hot b{color:var(--up)}
+.qdot{
+  position:absolute;transform:translate(-50%,-50%);cursor:pointer;
+  display:flex;align-items:center;gap:6px;background:none;border:none;padding:0;
+  color:inherit;font:inherit;white-space:nowrap;
+}
+.qdot .bead{
+  width:var(--sz);height:var(--sz);border-radius:50%;background:var(--hue);flex:none;
+  border:1px solid color-mix(in srgb,var(--hue) 55%,#000);transition:.15s;
+}
+.qdot .lbl{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--ink-3);
+  transition:.15s;text-shadow:0 1px 4px var(--ground);
+}
+.qdot:hover .bead{box-shadow:0 0 0 5px color-mix(in srgb,var(--hue) 25%,transparent)}
+.qdot:hover .lbl{color:var(--ink)}
+.qdot.flip{flex-direction:row-reverse}
+.qaxis{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-4)}
+.qaxis-y{
+  position:absolute;left:-4px;top:50%;transform:rotate(-90deg) translateX(50%);transform-origin:left center;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-4);
+}
+
+/* factor table */
+.ftab-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:2px;background:var(--panel)}
+.ftab{border-collapse:separate;border-spacing:0;min-width:820px;width:100%}
+.ftab th,.ftab td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line)}
+.ftab thead th{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-4);font-weight:500;vertical-align:bottom;
+}
+.ftab tbody tr:last-child th,.ftab tbody tr:last-child td{border-bottom:none}
+.ftab tbody th{font-family:var(--font-display);font-size:13px;letter-spacing:.045em;text-transform:uppercase;color:color-mix(in srgb,var(--hue) 68%,#fff);font-weight:600;font-variation-settings:"wdth" 90;white-space:nowrap}
+.fbar{height:6px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden;min-width:56px}
+.fbar i{display:block;height:100%;background:var(--hue);border-radius:1px}
+.fnum{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;display:block;margin-top:3px}
+.fscore{font-family:var(--font-mono);font-size:17px;font-variant-numeric:tabular-nums;font-weight:600}
+
+/* ---------- convergence ---------- */
+.conv-wrap{display:grid;gap:22px}
+.heat-scroll{overflow-x:auto;border:1px solid var(--line);background:var(--panel);border-radius:2px}
+.heat{border-collapse:separate;border-spacing:0;min-width:1020px;width:100%;font-family:var(--font-mono)}
+.heat th,.heat td{padding:0;text-align:center}
+.heat thead th{
+  font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:500;color:var(--ink-3);
+  padding:10px 3px;vertical-align:bottom;border-bottom:1px solid var(--line);height:112px;
+}
+.heat thead th span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;display:inline-block}
+.heat thead th:first-child{writing-mode:initial;text-align:left;padding-left:12px;min-width:180px}
+.heat tbody th{
+  text-align:left;font-weight:500;font-size:11.5px;color:var(--ink-2);padding:0 12px;
+  white-space:nowrap;border-right:1px solid var(--line);font-family:var(--font-body);
+}
+.heat tbody tr:hover th{color:var(--signal)}
+.cell{
+  width:100%;height:24px;display:grid;place-items:center;border:1px solid transparent;margin:1px;
+  font-size:10px;font-variant-numeric:tabular-nums;color:var(--ground);font-weight:700;
+  border-radius:1px;transition:.15s;
+}
+.cell.z{background:rgba(255,255,255,.022);color:transparent}
+.legend{display:flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);flex-wrap:wrap}
+.legend .ramp{display:flex;gap:2px}
+.legend .ramp i{width:22px;height:9px;display:block;border-radius:1px}
+.rank{display:flex;flex-direction:column;gap:7px}
+.rankrow{
+  display:grid;grid-template-columns:26px minmax(120px,190px) minmax(0,1fr) auto;gap:12px;align-items:center;
+  padding:9px 12px;border:1px solid var(--line);background:var(--panel);border-radius:2px;border-left:3px solid var(--hue);
+}
+.rankrow .pos{font-family:var(--font-mono);font-size:12px;color:var(--ink-4);font-variant-numeric:tabular-nums}
+.rankrow .nm{font-family:var(--font-display);font-size:14px;letter-spacing:.045em;text-transform:uppercase;color:color-mix(in srgb,var(--hue) 68%,#fff);font-variation-settings:"wdth" 90}
+.bar{height:7px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--hue);border-radius:1px}
+.rankrow .sc{font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+
+/* ---------- niches ---------- */
+.ncoverage{margin:0 0 14px;font-size:13px;line-height:1.62;color:var(--ink-3);max-width:88ch;border-left:2px solid var(--line-bright);padding-left:12px}
+.ncoverage b{color:var(--ink-2);font-weight:600}
+.nmap-wrap{border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:16px;margin-bottom:16px}
+.nmap{
+  position:relative;height:clamp(360px,48vh,520px);
+  border:1px solid var(--line);border-radius:2px;overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.016) 1px,transparent 1px) 0 0/10% 100%,
+    linear-gradient(rgba(255,255,255,.016) 1px,transparent 1px) 0 0/100% 20%,
+    linear-gradient(135deg,rgba(224,101,79,.05),transparent 58%),
+    var(--ground-2);
+}
+.nmid{position:absolute;background:var(--line-bright);opacity:.7}
+.nmid.h{left:0;right:0;height:1px}
+.nmid.v{top:0;bottom:0;width:1px}
+.nlab{position:absolute;font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);pointer-events:none;line-height:1.5}
+.nlab b{display:block;font-size:10.5px;letter-spacing:.1em;color:var(--ink-3)}
+.nlab.hot b{color:var(--crit)}
+.nbub{position:absolute;transform:translate(-50%,-50%);background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:5px;color:inherit;font:inherit;white-space:nowrap}
+.nbub .bd{width:var(--sz);height:var(--sz);border-radius:50%;flex:none;background:color-mix(in srgb,var(--pc) 55%,transparent);border:1.5px solid var(--pc);transition:.15s}
+.nbub .bl{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3);text-shadow:0 1px 5px var(--ground),0 0 9px var(--ground);transition:.15s}
+.nbub.flip{flex-direction:row-reverse}
+.hub.flip .hlbl{left:auto;right:calc(50% + var(--off))}
+.nbub:hover{z-index:9}
+.nbub:hover .bd{background:var(--pc);box-shadow:0 0 0 6px color-mix(in srgb,var(--pc) 22%,transparent)}
+.nbub:hover .bl{color:var(--ink)}
+.nbub.dim .bd{opacity:.4}
+.nbub.dim .bl{display:none}
+/* ---------- zoom surfaces ---------- */
+.zoomable{cursor:grab;touch-action:none;overflow:hidden}
+.zoomable.grabbing{cursor:grabbing}
+.zoomctl{
+  position:absolute;right:10px;bottom:10px;z-index:20;
+  display:flex;flex-direction:column;gap:1px;background:var(--line);
+  border:1px solid var(--line-bright);border-radius:2px;overflow:hidden;cursor:default;
+}
+.zoomctl button{
+  width:26px;height:26px;background:rgba(11,14,24,.92);border:none;color:var(--ink-3);
+  font-family:var(--font-mono);font-size:14px;line-height:1;cursor:pointer;
+  display:grid;place-items:center;transition:.12s;
+}
+.zoomctl button:hover{background:var(--panel-3);color:var(--signal)}
+.zoomhint{
+  position:absolute;left:10px;bottom:10px;z-index:20;pointer-events:none;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-4);background:rgba(11,14,24,.8);padding:3px 7px;border-radius:2px;
+}
+/* positioned in px by the layout functions, so drop the % defaults */
+.nbub{left:0;top:0}
+.hub{left:0;top:0;transform-origin:center;will-change:transform;transition:opacity .2s}
+
+/* hover tooltip — one shared node, positioned in viewport space */
+.tip{
+  position:fixed;top:0;left:0;z-index:200;pointer-events:none;
+  max-width:290px;padding:10px 12px;border-radius:3px;
+  background:rgba(11,14,24,.97);border:1px solid var(--line-bright);
+  box-shadow:0 10px 34px rgba(0,0,0,.55);
+  font-family:var(--font-body);font-size:12.5px;line-height:1.5;color:var(--ink-2);
+}
+.tip[hidden]{display:none}
+.tip b{display:block;font-family:var(--font-display);font-size:14px;letter-spacing:.03em;color:var(--ink);margin-bottom:3px;font-variation-settings:"wdth" 92}
+.tip .tsub{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);display:block;margin-bottom:6px}
+.tip .trow{display:flex;justify-content:space-between;gap:14px;font-family:var(--font-mono);font-size:11px;padding:1.5px 0}
+.tip .trow span{color:var(--ink-4)}
+.tip .trow b{display:inline;font-family:var(--font-mono);font-size:11px;color:var(--ink-2);margin:0;letter-spacing:0}
+.tip .tnote{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+
+/* a dropped label still shows on hover, and its marker comes forward */
+.qdot.nolabel:hover .lbl,
+.nbub.nolabel:hover .bl,
+.hub.nolabel:hover .hlbl{visibility:visible!important}
+
+.nmap-note{margin:10px 0 0;font-size:12.5px;line-height:1.6;color:var(--ink-3);max-width:92ch}
+.nmap-note b{color:var(--ink-2)}
+
+.phasekey{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:2px;margin-bottom:16px;overflow:hidden}
+.pk{background:var(--panel);padding:11px 13px}
+.pk b{display:flex;align-items:center;gap:7px;font-family:var(--font-display);font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;color:color-mix(in srgb,var(--pc) 68%,#fff);font-variation-settings:"wdth" 90}
+.pk b::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pc);flex:none}
+.pk span{display:block;font-size:11.5px;color:var(--ink-4);line-height:1.45;margin-top:5px}
+.pk i{display:block;font-style:normal;font-family:var(--font-mono);font-size:10px;color:var(--ink-3);margin-top:5px}
+
+.nfilters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.nfilters .glabel{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-right:2px}
+
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px}
+.ncard{
+  border:1px solid var(--line);border-top:2px solid var(--pc);background:var(--panel);
+  border-radius:2px;padding:13px 15px;cursor:pointer;text-align:left;color:inherit;font:inherit;
+  transition:border-color .15s,background .15s;display:flex;flex-direction:column;gap:9px;
+}
+.ncard:hover{background:var(--panel-2);border-color:var(--line-bright);border-top-color:var(--pc)}
+.ncard-top{display:flex;align-items:flex-start;gap:9px}
+.ncard h4{font-size:14.5px;letter-spacing:.02em;line-height:1.25;flex:1}
+.nphase{
+  font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 6px;border-radius:2px;white-space:nowrap;flex:none;
+  color:color-mix(in srgb,var(--pc) 68%,#fff);border:1px solid color-mix(in srgb,var(--pc) 42%,transparent);
+  background:color-mix(in srgb,var(--pc) 12%,transparent);
+}
+.nparent{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--th)}
+.nmetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-top:1px solid var(--line);padding-top:9px}
+.nm{min-width:0}
+.nm b{display:block;font-family:var(--font-mono);font-size:14px;font-variant-numeric:tabular-nums;line-height:1.15}
+.nm span{display:block;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4);margin-top:3px}
+.ncos{font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.ncos b{color:var(--ink-2);font-weight:600}
+.nbar{height:5px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden}
+.nbar i{display:block;height:100%;background:var(--pc);border-radius:1px}
+
+/* ---------- exposure ---------- */
+.disclaimer{
+  border:1px solid rgba(224,101,79,.34);border-left:3px solid var(--crit);
+  background:linear-gradient(90deg,rgba(224,101,79,.07),transparent 55%),var(--panel);
+  border-radius:2px;padding:14px 16px;margin-bottom:20px;
+}
+.disclaimer .eyebrow{display:block;color:var(--crit);margin-bottom:7px}
+.disclaimer p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-3);max-width:88ch}
+.disclaimer b{color:var(--ink-2)}
+
+.buyability{border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:15px 16px;margin-bottom:20px}
+.buyability > .eyebrow{display:block;margin-bottom:9px}
+.bexplain{margin:0 0 10px;font-size:13px;line-height:1.62;color:var(--ink-3);max-width:88ch}
+.bexplain b{color:var(--ink-2);font-weight:600}
+.bhead{
+  display:grid;grid-template-columns:minmax(120px,178px) 84px minmax(0,1fr) auto;gap:12px;
+  margin:16px 0 6px;padding-bottom:7px;border-bottom:1px solid var(--line);
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-4);
+}
+.brow{display:grid;grid-template-columns:minmax(120px,178px) 84px minmax(0,1fr) auto;gap:12px;align-items:center;padding:5px 0}
+.brow .bn{font-family:var(--font-display);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--hue) 68%,#fff);font-variation-settings:"wdth" 90}
+.pips{display:flex;gap:3px}
+.pips i{width:12px;height:9px;border-radius:1px;background:var(--line);display:block}
+.pips i.on{background:var(--hue)}
+.btrack{height:7px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden}
+.btrack i{display:block;height:100%;background:var(--signal);opacity:.55;border-radius:1px}
+.bnote{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);white-space:nowrap;letter-spacing:.05em}
+.blegend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-family:var(--font-mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4)}
+
+.expo{display:flex;flex-direction:column;gap:12px}
+.ecard{border:1px solid var(--line);border-left:3px solid var(--hue);background:var(--panel);border-radius:2px;overflow:hidden}
+.ecard-hd{display:flex;align-items:center;gap:12px;padding:13px 16px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.ecard-hd h3{font-size:16px;letter-spacing:.05em;text-transform:uppercase;color:var(--hue)}
+.qmeter{display:flex;align-items:center;gap:7px;margin-left:auto}
+.qmeter span{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-4)}
+.ecard-note{padding:12px 16px;font-size:13px;line-height:1.6;color:var(--ink-3);border-bottom:1px solid var(--line);max-width:92ch}
+.ecard-note b{color:var(--ink-2)}
+.ebody{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:var(--line)}
+.ecol{background:var(--panel);padding:12px 14px}
+.ecol > .eyebrow{display:block;margin-bottom:9px}
+.ecol.none{color:var(--ink-4);font-family:var(--font-mono);font-size:11.5px}
+.tick{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.035)}
+.tick:last-child{border-bottom:none}
+.tick .sym{font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:color-mix(in srgb,var(--hue) 68%,#fff);letter-spacing:.02em;white-space:nowrap}
+.tick .nm{font-size:12px;color:var(--ink-2);line-height:1.35}
+.tick .ds{display:block;font-family:var(--font-mono);font-size:10px;color:var(--ink-4);margin-top:1px;line-height:1.4}
+
+/* ---------- commitment ledger ---------- */
+.ledger{display:flex;flex-direction:column;gap:18px}
+.tier{border:1px solid var(--line);background:var(--panel);border-radius:2px;overflow:hidden}
+.tier-hd{display:flex;align-items:baseline;gap:12px;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02);flex-wrap:wrap}
+.tier-hd h3{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--tc)}
+.tier-hd .wt{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);border:1px solid var(--line);padding:2px 6px;border-radius:2px}
+.tier-hd .ct{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-left:auto}
+.tier-body{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--line)}
+.lrow{
+  display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:11px;align-items:center;
+  padding:10px 13px;background:var(--panel);border:none;cursor:pointer;text-align:left;
+  color:inherit;font:inherit;width:100%;transition:background .15s;
+}
+.lrow:hover{background:var(--panel-2)}
+.lrow canvas{width:30px;height:30px;border-radius:50%;flex:none}
+.lrow .who{font-size:13px;font-weight:600;line-height:1.25}
+.lrow .what{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.02em}
+.lrow .what b{color:var(--tc);font-weight:600}
+.lrow .thm{width:8px;height:8px;border-radius:50%;background:var(--th);flex:none}
+.pastflag{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4);border:1px solid var(--line);padding:1px 4px;border-radius:2px;margin-left:5px}
+
+.rolebadge{
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;
+  padding:1.5px 5px;border-radius:2px;border:1px solid;
+  color:var(--rw);border-color:color-mix(in srgb,var(--rw) 42%,transparent);
+  background:color-mix(in srgb,var(--rw) 12%,transparent);
+}
+.listedchip{font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4);border:1px dashed var(--line-bright);padding:1.5px 5px;border-radius:2px}
+/* provenance chips: what kind of entity, whose money, how much to trust it */
+.entchip,.statechip,.confchip{font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;padding:1.5px 5px;border-radius:2px;border:1px solid}
+.entchip{color:#b98ae0;border-color:rgba(185,138,224,.42);background:rgba(185,138,224,.12)}
+.statechip{color:#e0654f;border-color:rgba(224,101,79,.42);background:rgba(224,101,79,.12);cursor:help}
+.confchip.low{color:var(--warn);border-color:rgba(224,163,79,.45);background:rgba(224,163,79,.12);cursor:help}
+.caveatbox{border:1px solid rgba(224,163,79,.35);border-left:3px solid var(--warn);background:rgba(224,163,79,.06);border-radius:2px;padding:11px 13px;margin-top:10px}
+.caveatbox b{color:var(--warn);font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:5px}
+.caveatbox p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
+
+/* ---------- divergence cards ---------- */
+.diverge{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:9px}
+.dv{border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:12px;border-top:2px solid var(--hue)}
+.dv h5{margin:0 0 9px;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--hue)}
+.dv-gap{display:flex;align-items:baseline;gap:7px;margin-bottom:8px}
+.dv-gap b{font-family:var(--font-mono);font-size:23px;font-variant-numeric:tabular-nums;line-height:1}
+.dv-gap b.pos{color:var(--up)}
+.dv-gap b.neg{color:var(--ink-4)}
+.dv-gap span{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4)}
+.dv-rows{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--line);padding-top:8px}
+.dv-row{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--ink-3)}
+.dv-row b{color:var(--ink-2);font-variant-numeric:tabular-nums;font-weight:600}
+
+/* ---------- operators ---------- */
+.ops{display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:11px}
+.op{padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer;text-align:left;color:inherit;font:inherit;transition:border-color .16s,background .16s}
+.op:hover{border-color:var(--signal-line);background:var(--panel-2)}
+.op[aria-pressed="true"]{border-color:var(--signal);background:var(--signal-dim)}
+.op-top{display:flex;gap:11px;align-items:center;margin-bottom:10px}
+.op canvas{width:42px;height:42px;border-radius:50%;flex:none}
+.op h4{font-size:15px;letter-spacing:.03em;line-height:1.15}
+.op-role{font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;color:var(--ink-4);text-transform:uppercase;display:block;margin-top:2px}
+.regchip{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;padding:1.5px 5px;border-radius:2px;border:1px solid color-mix(in srgb,var(--rc) 40%,transparent);color:color-mix(in srgb,var(--rc) 68%,#fff);background:color-mix(in srgb,var(--rc) 12%,transparent);margin-left:auto;align-self:flex-start}
+.op-thesis{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin:0 0 10px}
+.op-themes{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px}
+.tchip{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 32%,transparent)}
+.op-foot{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:9px}
+.op-foot span{font-family:var(--font-mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4)}
+.op-foot b{font-family:var(--font-mono);font-size:14px;color:var(--signal);font-variant-numeric:tabular-nums}
+
+/* ---------- atlas ---------- */
+.atlas{display:grid;grid-template-columns:minmax(0,1fr) 272px;gap:14px;align-items:start}
+.mapbox{border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:12px;position:relative}
+.mapstage{position:relative;width:100%}
+.mapstage.globe{cursor:grab;touch-action:none;user-select:none}
+.mapstage.globe.grabbing{cursor:grabbing}
+.mapstage.globe canvas{border-radius:0;background:transparent}
+.mapstage canvas{width:100%;display:block;border-radius:2px}
+.hub{
+  position:absolute;background:none;border:none;padding:0;cursor:pointer;
+  display:grid;place-items:center;
+}
+.hub .ring{
+  width:var(--sz);height:var(--sz);border-radius:50%;
+  background:color-mix(in srgb,var(--rc) 42%,transparent);
+  border:1.5px solid var(--rc);transition:.16s;
+}
+.hub:hover .ring{background:color-mix(in srgb,var(--rc) 75%,transparent);box-shadow:0 0 0 6px color-mix(in srgb,var(--rc) 20%,transparent)}
+.hub .hlbl{
+  position:absolute;left:calc(50% + var(--off));top:50%;transform:translateY(-50%);
+  font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3);white-space:nowrap;
+  text-shadow:0 1px 4px var(--ground),0 0 8px var(--ground),0 0 3px var(--ground);pointer-events:none;
+}
+/* hubs on the right edge label leftwards so the name stays on the map */
+.hub.flip .hlbl{left:auto;right:calc(50% + var(--off))}
+.hub:hover .hlbl{color:var(--ink)}
+.hub:hover{z-index:12}
+.regbars{display:flex;flex-direction:column;gap:5px}
+.regrow{border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:8px 11px;border-left:3px solid var(--rc)}
+.regrow h5{font-family:var(--font-display);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--rc) 68%,#fff);margin-bottom:4px;font-variation-settings:"wdth" 90}
+.regstat{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);padding:0}
+.regstat b{color:var(--ink-2);font-variant-numeric:tabular-nums;font-weight:600}
+.hublist{display:flex;flex-direction:column;gap:4px;margin-top:14px}
+.hubrow{
+  display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:9px;align-items:center;
+  padding:5px 10px;border:1px solid var(--line);background:var(--panel);border-radius:2px;
+  cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%;
+}
+.hubrow:hover{border-color:var(--rc)}
+.hubrow .sw{width:9px;height:9px;border-radius:50%;background:var(--rc)}
+.hubrow .hn{font-size:12.5px;font-weight:600}
+.hubrow .hs{font-family:var(--font-mono);font-size:10px;color:var(--ink-4)}
+.hubrow .hv{font-family:var(--font-mono);font-size:11.5px;color:color-mix(in srgb,var(--rc) 68%,#fff);font-variant-numeric:tabular-nums}
+
+/* ---------- momentum ---------- */
+.momentum{border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:16px}
+.mo-scroll{overflow-x:auto}
+.mo-summary{margin-bottom:14px}
+.mo-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:2px;overflow:hidden;margin-bottom:11px}
+.mo-tk{background:var(--panel);padding:13px 15px}
+.mo-tk b{display:block;font-family:var(--font-mono);font-size:23px;font-variant-numeric:tabular-nums;line-height:1.05;letter-spacing:-.015em}
+.mo-tk span{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);margin-top:5px}
+.mo-years{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;border:1px solid var(--line);background:var(--panel);border-radius:2px;padding:13px 15px}
+.mo-yr{display:flex;flex-direction:column;align-items:center;gap:6px}
+.mo-ybar{width:100%;height:52px;background:rgba(255,255,255,.04);border-radius:1px;display:flex;align-items:flex-end}
+.mo-ybar i{display:block;width:100%;background:linear-gradient(180deg,var(--signal),rgba(240,165,60,.35));border-radius:1px}
+.mo-yr b{font-family:var(--font-mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.mo-yr span{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);letter-spacing:.07em}
+
+.mo-lane{display:grid;grid-template-columns:236px minmax(520px,1fr);gap:14px;align-items:center;border-bottom:1px solid rgba(255,255,255,.04);padding:5px 0}
+.mo-lane:last-child{border-bottom:none}
+.mo-name{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:9px;align-items:baseline;text-align:right}
+.mo-ln{font-family:var(--font-display);font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--hue) 68%,#fff);font-variation-settings:"wdth" 88;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mo-lv{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mo-lv em{display:block;font-style:normal;font-size:8.5px;color:var(--ink-4);letter-spacing:.05em}
+.mo-ld{font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums;min-width:44px;white-space:nowrap}
+.mo-track{position:relative;height:38px}
+.mo-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.11))}
+.dot{position:absolute;top:50%;transform:translate(-50%,-50%);border-radius:50%;background:var(--hue);border:1px solid color-mix(in srgb,var(--hue) 60%,#000);cursor:pointer;transition:.15s;padding:0}
+.dot:hover{box-shadow:0 0 0 4px color-mix(in srgb,var(--hue) 26%,transparent);z-index:5}
+.mo-axis{display:grid;grid-template-columns:184px minmax(560px,1fr);gap:14px;margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
+.mo-ticks{position:relative;height:16px}
+.mo-ticks span{position:absolute;transform:translateX(-50%);font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);letter-spacing:.08em}
+
+.grad{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line-bright);border-radius:2px;padding:11px 14px;margin-bottom:20px;background:rgba(255,255,255,.014)}
+.grad .lbl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4)}
+.grad .item{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2)}
+.grad .item b{color:var(--up);font-weight:600}
+
+/* ---------- slide-over ---------- */
+.scrim{position:fixed;inset:0;background:rgba(4,6,12,.72);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:60}
+.scrim.on{opacity:1;pointer-events:auto}
+.panel{
+  position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--ground-2);
+  border-left:1px solid var(--line-bright);transform:translateX(102%);
+  transition:transform .3s cubic-bezier(.22,.7,.3,1);z-index:61;overflow-y:auto;
+  box-shadow:-30px 0 70px rgba(0,0,0,.6);
+}
+.panel.on{transform:none}
+.panel-hd{position:sticky;top:0;z-index:2;padding:18px var(--pad);background:linear-gradient(180deg,color-mix(in srgb,var(--hue) 15%,var(--ground-2)),var(--ground-2));border-bottom:1px solid var(--line)}
+.panel-close{position:absolute;top:15px;right:15px;width:30px;height:30px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;font-size:16px;line-height:1;display:grid;place-items:center}
+.panel-close:hover{border-color:var(--signal-line);color:var(--signal)}
+.panel-id{display:flex;gap:14px;align-items:center;padding-right:38px}
+.panel-id canvas{width:60px;height:60px;border-radius:3px;flex:none}
+.panel-id h3{font-size:23px;letter-spacing:.03em;line-height:1.1}
+.panel-bd{padding:var(--pad);display:flex;flex-direction:column;gap:22px}
+.sect > .eyebrow{display:block;margin-bottom:8px}
+.sect p{margin:0;font-size:14px;line-height:1.65;color:var(--ink-2);max-width:64ch}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.fact{background:var(--panel);padding:11px 12px}
+.fact span{display:block;font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);margin-bottom:3px}
+.fact b{font-family:var(--font-mono);font-size:14.5px;font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+.backers{display:flex;flex-direction:column;gap:5px}
+.backer{display:flex;align-items:center;gap:10px;padding:8px 11px;background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%}
+.backer:hover{border-color:var(--signal-line)}
+.backer canvas{width:26px;height:26px;border-radius:50%;flex:none}
+.backer .bn{font-size:13px;font-weight:600}
+.backer .br{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);letter-spacing:.04em}
+.backer .bflag{margin-left:auto;font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--up);border:1px solid rgba(95,211,154,.4);padding:1.5px 5px;border-radius:2px}
+.otherb{font-size:12.5px;color:var(--ink-3);line-height:1.6;margin:8px 0 0}
+.otherb b{color:var(--ink-2);font-weight:600}
+.plist{display:flex;flex-direction:column;gap:5px}
+.pitem{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 11px;background:var(--panel);border:1px solid var(--line);border-radius:2px;cursor:pointer;text-align:left;color:inherit;font:inherit;width:100%}
+.pitem:hover{border-color:var(--hue2)}
+.pitem .sw{width:9px;height:9px;border-radius:50%;background:var(--hue2)}
+.pitem .pn{font-size:13px;font-weight:600;line-height:1.25}
+.pitem .pt{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);letter-spacing:.05em;text-transform:uppercase}
+.pitem .pv{font-family:var(--font-mono);font-size:12px;color:color-mix(in srgb,var(--hue2) 68%,#fff);font-variant-numeric:tabular-nums}
+
+.empty{padding:52px 20px;text-align:center;color:var(--ink-4);border:1px dashed var(--line);border-radius:2px;font-family:var(--font-mono);font-size:12.5px;letter-spacing:.05em}
+.footer{border-top:1px solid var(--line);padding:22px var(--pad) 40px;color:var(--ink-4);font-size:12px;line-height:1.65;max-width:100ch}
+.footer b{color:var(--ink-3)}
+.footer .stamp{font-family:var(--font-mono);color:var(--ink-3)}
+.footer p + p{margin-top:11px}
+
+@media (max-width:960px){ .atlas{grid-template-columns:1fr} }
+@media (max-width:940px){
+  .frame{grid-template-columns:1fr}
+  .rail{position:static;min-height:0;border-right:none;border-bottom:1px solid var(--line);padding:12px var(--pad);flex-direction:row;align-items:center;gap:14px;overflow-x:auto}
+  .nav{flex-direction:row;gap:2px}
+  .navlink{border-left:none;border-bottom:2px solid transparent;white-space:nowrap;grid-template-columns:auto auto}
+  .navlink[aria-selected="true"]{border-left-color:transparent;border-bottom-color:var(--signal)}
+  .railnote{display:none}
+  .band-head{grid-template-columns:1fr}
+  .band-metrics{justify-content:flex-start;flex-wrap:wrap}
+  .metric{text-align:left}
+  .conv{justify-content:flex-start}
+  .qdot .lbl{display:none}
+}
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important} }
+</style>
+
+<div class="app"><div class="shell">
+
+  <header class="masthead">
+    <div class="masthead-in">
+      <div class="brand">
+        <canvas id="brandmark" width="68" height="68" aria-hidden="true"></canvas>
+        <div class="brand-txt"><h1>Founder Radar</h1><p>Private-market conviction index</p></div>
+      </div>
+      <div class="readouts">
+        <div class="readout"><b id="r-ops">—</b><span>Operators</span></div>
+        <div class="readout"><b id="r-cos">—</b><span>Ventures</span></div>
+        <div class="readout"><b id="r-cap">—</b><span>Tracked value</span></div>
+        <div class="readout hot"><b id="r-next">—</b><span>Next-thing signal</span></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="controls" id="controls">
+    <div class="ctrl-row">
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+        <input id="q" type="search" placeholder="Search…" aria-label="Search the radar">
+      </div>
+      <button class="ftoggle" id="ftoggle" type="button" aria-expanded="false" aria-controls="fpanel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
+        Filter<b id="fcount"></b>
+      </button>
+      <div class="activepills" id="activepills"></div>
+      <button class="clearbtn" id="clear" type="button" hidden>Clear all</button>
+      <div class="fsummary" id="fsummary"></div>
+    </div>
+    <div class="fpanel" id="fpanel" hidden>
+      <div class="fgroup" id="stagefilters" role="group" aria-label="Filter by stage"><span class="glabel">Stage</span></div>
+      <div class="fgroup" id="kindfilters" role="group" aria-label="Filter by who is backing"><span class="glabel">Backed by</span></div>
+      <div class="fgroup" id="regfilters" role="group" aria-label="Filter by region"><span class="glabel">Region</span></div>
+      <div class="fgroup" id="filters" role="group" aria-label="Filter by theme"><span class="glabel">Theme</span></div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <nav class="rail" aria-label="Views">
+      <div class="nav" role="tablist" id="navrail"></div>
+      <div class="railnote">
+        <b>Reading the signal.</b> Conviction counts <em>independent</em> operators holding a position, not dollars. Emergence scores how early a theme still is. The interesting themes are high on both.
+        <span class="stamp">DATA AS OF 04 AUG 2026</span>
+      </div>
+    </nav>
+
+    <main class="stage"><div class="subtabs" id="subtabs" hidden></div>
+
+      <section class="view on" id="v-brief" role="tabpanel">
+        <div class="brief">
+          <div class="brief-hero">
+            <div class="eyebrow">Dispatch — 04 August 2026</div>
+            <h2>The consensus is intelligence. The <em>conviction</em> is somewhere else.</h2>
+            <p class="lede" id="brief-lede"></p>
+          </div>
+          <div class="brief-stats" id="brief-stats"></div>
+          <div class="brief-grid">
+            <div class="brief-main" id="brief-main"></div>
+            <aside><div class="findings" id="brief-findings"></div></aside>
+          </div>
+          <section class="brief-sectors" id="brief-longshots"></section>
+          <section class="brief-sectors" id="brief-sectors"></section>
+          <section class="brief-atlas" id="brief-atlas">
+        <div class="viewhead">
+          <div class="eyebrow">05 — The geography</div>
+          <h2>Where this is actually being built</h2>
+          <p>Node size scales with tracked value in each hub; colour is macro-region. Scroll to zoom, drag to pan. The concentration is the finding — but so is what sits outside it, because the Chinese, Japanese and Korean clusters are running a different thesis, at a fraction of the price, with the state as anchor investor rather than a late arrival.</p>
+          <p><b>Read the sizes carefully.</b> Bubble area is tracked value, and value is disclosed far less often outside North America. Africa and Latin America publish almost no valuations, so their nodes are small because the numbers are missing, not because the companies are.</p>
+        </div>
+        <div class="atlas">
+          <div class="mapbox"><div class="mapstage" id="mapstage"><canvas id="worldmap" aria-label="World map of venture hubs"></canvas></div></div>
+          <div>
+            <div class="regbars" id="regbars"></div>
+            <div class="eyebrow" style="margin:18px 0 8px">Hubs by tracked value</div>
+            <div class="hublist" id="hublist"></div>
+          </div>
+        </div>
+      </section>
+          <div class="brief-nav" id="brief-nav"></div>
+        </div>
+      </section>
+
+      <section class="view" id="v-radar" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">01 — The map</div>
+          <h2>Sixteen places the builders are putting private money</h2>
+          <p>Each band is a thesis about the future, ranked by <b>operator conviction</b> — how many of the tracked operators independently hold a position. A theme five unrelated operators fund is a stronger signal than one theme one operator funds enormously.</p>
+          <p>The chip beside each name is its <b>emergence grade</b>: how early the theme still is. <b>Early</b> means high conviction has arrived before the capital, the crossover funds and the public comparables. Open a band to see the ventures inside it.</p>
+        </div>
+        <div class="grad" id="grad"></div>
+        <div class="bands" id="bands"></div>
+      </section>
+
+      <section class="view" id="v-horizon" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">03 — The next thing</div>
+          <h2>Conviction against maturity</h2>
+          <p>Ranking by size only ever tells you what is already big. This plots each theme on two independent axes: how many operators believe in it, and how early it still is. <b>Emergence</b> is a composite of six factors, each of which independently indicates earliness — stage, price, capital recency, how much of it is founder-built rather than merely funded, whether crossover and sovereign money has arrived, and whether you could buy public exposure instead.</p>
+          <p>The upper-right quadrant is the answer to the question. High belief, low maturity — the operators are committed and the market has not repriced it yet.</p>
+        </div>
+        <div class="verdict" id="verdict"></div>
+        <div class="quad-wrap">
+          <div class="quad" id="quad">
+            <span class="qaxis-y">Operator conviction →</span>
+          </div>
+          <div class="qaxis"><span>← Mature · already priced</span><span>Emergent · pre-consensus →</span></div>
+        </div>
+        <div class="eyebrow" style="margin-bottom:9px">Emergence factor breakdown — higher bar means earlier</div>
+        <div class="ftab-scroll"><table class="ftab" id="ftab"></table></div>
+      </section>
+
+      <section class="view" id="v-niche" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">04 — The micro-trends</div>
+          <h2>One level below the themes</h2>
+          <p>A theme is a sector; a niche is a bet. "Physical AI &amp; Robotics" contains robot foundation models, humanoid hardware, warehouse automation and surgical robotics — different physics, different timelines, different odds. Averaging them produces one bland number and buries every actual signal.</p>
+          <p>So the same six-factor emergence score runs again here, on <b id="niche-count">—</b> specific niches instead of sixteen sectors. Each also carries a <b>lifecycle phase</b> computed from two things: how concentrated the capital is (has a winner emerged?) and whether funding accelerated or decelerated year on year.</p>
+        </div>
+        <p class="ncoverage" id="niche-coverage"></p>
+        <div class="nmap-wrap">
+          <div class="nmap" id="nmap"><span class="qaxis-y">Capital momentum →</span></div>
+          <div class="qaxis"><span>← Mature · already priced</span><span>Emergent · pre-consensus →</span></div>
+          <p class="nmap-note">Each bubble is one niche. Across: how early it still is. Up: whether capital accelerated or decelerated year on year, on a log scale so a jump from near-zero does not distort the chart. Size is the number of companies; colour is lifecycle phase. <b>Top-right is early and accelerating</b> — believed, funded, not yet priced.</p>
+        </div>
+        <div class="phasekey" id="phasekey"></div>
+        <div class="nfilters" id="nfilters"></div>
+        <div class="ngrid" id="ngrid"></div>
+        <div class="empty" id="nempty" hidden>No niches match those filters.</div>
+      </section>
+
+      <section class="view" id="v-conv" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">03 — The overlap</div>
+          <h2>Where independent bets collide</h2>
+          <p>Rows are operators, columns are themes, cell value is positions held. Dense columns are the consensus of people with the most information and the least need to be right in public. Sparse-but-bright cells are the idiosyncratic bets — often the more interesting ones.</p>
+        </div>
+        <div class="conv-wrap">
+          <div>
+            <div class="legend" style="margin-bottom:9px"><span>Positions per operator</span><div class="ramp" id="ramp"></div><span id="rampmax"></span></div>
+            <div class="heat-scroll"><table class="heat" id="heat"></table></div>
+          </div>
+          <div>
+            <div class="eyebrow" style="margin-bottom:10px">Themes ranked by independent operator conviction</div>
+            <div class="rank" id="rank"></div>
+          </div>
+          <div>
+            <div class="eyebrow" style="margin-bottom:5px">Leading indicator — where belief runs ahead of capital</div>
+            <p style="margin:0 0 12px;color:var(--ink-3);font-size:13.5px;line-height:1.6;max-width:78ch">
+              A theme's conviction rank and its capital rank usually track each other. Where they diverge sharply the operators have committed but the market has not repriced. Positive gaps are the early signal; negative gaps are themes where the money already arrived.
+            </p>
+            <div class="diverge" id="diverge"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="v-ops" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">04 — The people</div>
+          <h2>Who is building what</h2>
+          <p>Operators who run things and deploy their own capital, alongside the funds and state vehicles that anchor rounds outside the US. Filter to <b>Founders</b> to strip out the institutions and see the original signal on its own. Select one to filter the whole radar to their positions; open the panel for their full book. A <b>Built</b> flag means they founded or personally run the company — the earliest conviction signal available.</p>
+        </div>
+        <div class="ops" id="ops"></div>
+      </section>
+
+      
+
+      <section class="view" id="v-expo" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">06 — Ways in</div>
+          <h2>What of this you can actually buy</h2>
+          <p>Every theme mapped to the listed instruments that carry business exposure to it — pure-plays first, then diluted proxies, then funds. The <b>proxy quality</b> score rates how faithfully public markets track the private thesis on this board, from 5 (you can essentially buy it) down to 0 (no listed representation exists).</p>
+          <p>Read the scores against the Horizon view and the pattern is hard to miss: <b>the themes that score highest on emergence are the ones you can least buy.</b> That is not a coincidence — absence of a public proxy is one of the six emergence factors. Investability is what maturity looks like from the outside.</p>
+        </div>
+        <div class="disclaimer">
+          <span class="eyebrow">Not investment advice</span>
+          <p>This is a factual map of where each theme touches public markets, assembled so you can see what is and is not reachable. It is <b>not a recommendation</b>, and no suitability, risk or valuation assessment has been made — I am not a licensed adviser. Several of these instruments are extremely volatile: Oklo ran 144% and then gave much of it back, EUAD gained 73% in 2025 and is roughly flat since. Tickers, assets and returns are as at 4 August 2026 and go stale quickly. Verify everything independently before acting on any of it.</p>
+        </div>
+        <div class="buyability" id="buyability"></div>
+        <div class="expo" id="expo"></div>
+      </section>
+
+      <section class="view" id="v-vent" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">07 — The companies</div>
+          <h2>Every private venture on the board</h2>
+          <p>Sorted by last known valuation. Amber chips mark figures that are reported rather than closed; <b>Low conf.</b> marks a valuation the research flagged as unreliable, with the reason on hover. <b>State</b> means sovereign or government capital is on the cap table, and <b>State entity / Self-funded / SPAC-announced</b> mean it is not an ordinary priced venture round at all.</p>
+        </div>
+        <div class="vgrid" id="vgrid"></div>
+        <div class="empty" id="vempty" hidden>No ventures match those filters.</div>
+      </section>
+
+      <section class="view" id="v-mom" role="tabpanel">
+        <div class="viewhead">
+          <div class="eyebrow">08 — The clock</div>
+          <h2>When the money actually landed</h2>
+          <p>Every major disclosed round on the board across five years. Dot size scales with round size. Lanes empty in 2022 and crowded in 2026 are the themes that turned real — read right-hand density as heat, not the total.</p>
+        </div>
+        <div class="mo-summary" id="mo-summary"></div>
+        <div class="momentum">
+          <div class="mo-scroll"><div id="lanes"></div><div class="mo-axis"><div></div><div class="mo-ticks" id="ticks"></div></div></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p><b>How this was built.</b> Positions are compiled from public reporting on funding rounds, family-office disclosures and company announcements, researched <span class="stamp">4 August 2026</span>. A "position" means an operator, their fund, family office or corporate venture arm is a disclosed backer — it does not imply stake size, and undisclosed positions are by definition missing, so the board understates quiet operators and overstates loud ones. Valuations are last known post-money and go stale fast; several are marked <b>reported</b> where a round was in negotiation rather than closed. Ventures that have since listed appear only in the graduated strip, since the brief was private companies. Company marks are procedurally generated from each name, not official logos.</p>
+    <p><b>On the involvement layer.</b> Roles — chief executive, co-founder, chairman, board seat, advisor — are sourced from company leadership pages, appointment announcements and reporting. This data is materially sparser and harder to verify than funding data, so the layer <b>understates</b> involvement: a position showing as capital-only means no role was found, not that none exists. Advisory-board seats in particular are rarely announced and are almost certainly under-represented here. Two listed companies, Oklo and Palantir, are included despite the private-company brief precisely because the role is the signal — Altman chaired Oklo from Y Combinator to the NYSE before stepping down in April 2025, and Thiel has chaired Palantir since 2003, which is where most of the defence cluster on this board originates.</p>
+    <p><b>How emergence is scored.</b> Six factors, equally directional, weighted: stage centroid (20%), median valuation (20%), share of capital raised in the trailing twelve months (20%), founder-built share of positions (15%), absence of crossover and sovereign investors (15%), and absence of a listed pure-play comparable (10%). Each is normalised to 0–100 where higher means earlier. It is a heuristic for ordering themes against each other, not a forecast — a high score says the market has not yet repriced a theme, not that it will. Themes carrying fewer than four ventures are flagged with ⚠ in the factor table: with that few companies a single outlier moves the score several points, so treat those rankings as directional at best.</p>
+    <p><b>On the non-US entries.</b> Valuations outside North America are disclosed far less often, are frequently state-influenced, and in several cases are pre-marketing targets rather than priced rounds. Every such figure carries a confidence grade and a caveat on its card; eleven entities are flagged as state programmes, self-funded companies or SPAC announcements rather than venture-backed companies, and should never be read as priced valuations. Legal domicile is shown separately from operational headquarters where they diverge, because a Delaware flip is close to mandatory for any Latin American company raising a US round — a dataset keyed on incorporation undercounts those regions, and one keyed on founder nationality overcounts them.</p>
+    <p><b>Why regions are not comparable on value alone.</b> China's most valuable private companies listed in 2025–26 and therefore left this board; Africa and Latin America disclose almost nothing; Gulf entities are government budgets rather than equity. Comparing tracked value across regions measures disclosure practice as much as it measures activity. Venture counts and emergence scores travel better than dollar totals.</p>
+  </footer>
+
+</div></div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" tabindex="-1"></aside>
+
+<script>
+(() => {
+"use strict";
+
+/*__DATA__*/
+
+/* ============================================================
+   MERGE — seedlings and funds fold into the main model
+   ============================================================ */
+
+/* Operator classes. `builder` runs or founds things; `allocator` is a person
+   whose primary act is deploying capital; `fund` is an institution. Splitting
+   them fixes the flaw where a firm with fifty partners counted the same as one
+   angel — and lets the board be read founders-only. */
+const ALLOCATORS = new Set(["thiel","khosla","kushner","andreessen","gil","lonsdale","naval","nfdg","neilshen","son"]);
+/* An operator carrying a region that no longer exists must never crash a
+   render — this bit once. Fall back to the largest region instead. */
+OPERATORS.forEach(o=>{
+  o.kind = ALLOCATORS.has(o.id) ? "allocator" : "builder";
+  if(!REGIONS[o.region]) o.region="na";
+});
+FUNDS.forEach(f=>{ f.kind="fund"; f.role="Venture fund"; OPERATORS.push(f); });
+
+/* Seedlings: compact rows expanded to the full venture shape. Valuation is
+   deliberately absent — most have never disclosed one. */
+SEEDLINGS.forEach(([id,name,theme,tag,stage,m,funds,hub])=>{
+  if(hub && !HUBS[hub]) hub=null;   // guard: unknown hub id must never reach the atlas
+  VENTURES.push({
+    id, name, theme, tag, stage, m, hub: hub||null,
+    v:0, undisclosed:true, seed:true,
+    what:`${tag}. Surfaced from the published portfolio of ${funds.map(f=>(OPERATORS.find(o=>o.id===f)||{}).name||f).join(", ")}.`,
+    why:"One of the smaller positions on the board. Included because the emergence signal lives at this end — these are the companies a theme is made of before it has a headline.",
+    backers:funds, others:"See fund portfolio", rounds:[], last:stage
+  });
+});
+
+/* Global layer: the regional research. Carries three fields the US-only data
+   never needed — how much to trust the valuation, whether the entity is even a
+   venture-backed company, and whether state capital is on the cap table. */
+GLOBAL_OPS.forEach(f=>{ f.kind="fund"; f.role="Fund / institution"; OPERATORS.push(f); });
+
+const ENT_LABEL={state:"State entity",self:"Self-funded",spac:"SPAC-announced"};
+[...GLOBAL,...SEEDROUND].forEach(([id,name,theme,hub,tag,stage,m,v,backers,o])=>{
+  const opt=o||{};
+  if(hub && !HUBS[hub]) hub=null;
+  m = trueMaturity(m,opt.raise,v);      // label alone is not an earliness signal
+  VENTURES.push({
+    id, name, theme, tag, stage, m, hub: hub||null,
+    raise: opt.raise||0, uni: opt.uni||null, grant: !!opt.grant,
+    v: v||0, undisclosed: !v, rep: !!opt.rep, global:true,
+    conf: opt.conf||"low", ent: opt.ent||null, stateCap: !!opt.st,
+    domicile: opt.dom||null, caveat: opt.note||null,
+    what:`${tag}.`,
+    why: opt.note || "Added from the August 2026 regional research. See the confidence grade before relying on the valuation.",
+    backers: backers.filter(b=>b), others:"See research notes", rounds:[],
+    last: stage
+  });
+});
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const T = Object.fromEntries(THEMES.map(t=>[t.id,t]));
+const O = Object.fromEntries(OPERATORS.map(o=>[o.id,o]));
+const V = Object.fromEntries(VENTURES.map(v=>[v.id,v]));
+const $ = s => document.querySelector(s);
+const el = (t,c,h) => { const n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; };
+const clamp = n => Math.max(0,Math.min(100,n));
+
+/* ---------- shared hover tooltip ----------
+   Native title= is slow to appear and cannot be styled. One reusable node,
+   positioned in viewport space so it never clips at an edge. */
+const TIP = (()=>{
+  const el=document.createElement("div");
+  el.className="tip"; el.hidden=true; el.setAttribute("role","tooltip");
+  document.body.appendChild(el);
+  let raf=null, last=null;
+  const place=e=>{
+    last=e;
+    if(raf) return;
+    raf=requestAnimationFrame(()=>{
+      raf=null;
+      const pad=16, w=el.offsetWidth, h=el.offsetHeight;
+      let x=last.clientX+pad, y=last.clientY+pad;
+      if(x+w>innerWidth-10)  x=last.clientX-w-pad;
+      if(y+h>innerHeight-10) y=last.clientY-h-pad;
+      el.style.transform=`translate(${Math.max(8,x)}px,${Math.max(8,y)}px)`;
+    });
+  };
+  return {
+    bind(node,html){
+      node.addEventListener("pointerenter",e=>{ el.innerHTML=html; el.hidden=false; place(e); });
+      node.addEventListener("pointermove",place);
+      node.addEventListener("pointerleave",()=>{ el.hidden=true; });
+      node.addEventListener("blur",()=>{ el.hidden=true; });
+    }
+  };
+})();
+
+/* ---------- shared pan / zoom ----------
+   Screen = world * k + t. Markers and labels keep a constant on-screen size
+   so zooming reveals detail rather than magnifying everything uniformly.
+   Wheel zooms about the cursor, drag pans, double-click resets. */
+function createZoom(surface,onChange,opts={}){
+  const z={k:1,tx:0,ty:0};
+  const MIN=opts.min||1, MAX=opts.max||8;
+  let drag=null, moved=false;
+
+  const clamp=()=>{
+    z.k=Math.max(MIN,Math.min(MAX,z.k));
+    const w=surface.clientWidth, h=surface.clientHeight;
+    // never let the content leave the frame entirely
+    const maxX=0, minX=w-w*z.k, maxY=0, minY=h-h*z.k;
+    z.tx=Math.min(maxX,Math.max(minX,z.tx));
+    z.ty=Math.min(maxY,Math.max(minY,z.ty));
+  };
+  const apply=()=>{ clamp(); onChange(z); };
+
+  const zoomAt=(cx,cy,factor)=>{
+    const k0=z.k; z.k=Math.max(MIN,Math.min(MAX,z.k*factor));
+    const r=z.k/k0;
+    z.tx=cx-(cx-z.tx)*r;
+    z.ty=cy-(cy-z.ty)*r;
+    apply();
+  };
+
+  surface.addEventListener("wheel",e=>{
+    e.preventDefault();
+    const r=surface.getBoundingClientRect();
+    zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.18:1/1.18);
+  },{passive:false});
+
+  surface.addEventListener("pointerdown",e=>{
+    if(e.button!==0) return;
+    drag={x:e.clientX,y:e.clientY,tx:z.tx,ty:z.ty}; moved=false;
+    surface.setPointerCapture(e.pointerId);
+    surface.classList.add("grabbing");
+  });
+  surface.addEventListener("pointermove",e=>{
+    if(!drag) return;
+    const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
+    z.tx=drag.tx+dx; z.ty=drag.ty+dy; apply();
+  });
+  const end=e=>{
+    if(!drag) return;
+    drag=null; surface.classList.remove("grabbing");
+    try{ surface.releasePointerCapture(e.pointerId); }catch{}
+  };
+  surface.addEventListener("pointerup",end);
+  surface.addEventListener("pointercancel",end);
+  // a drag must not fire the click underneath it
+  surface.addEventListener("click",e=>{ if(moved){ e.stopPropagation(); e.preventDefault(); moved=false; } },true);
+  surface.addEventListener("dblclick",e=>{ e.preventDefault(); z.k=1; z.tx=0; z.ty=0; apply(); });
+
+  return {
+    z,
+    reset(){ z.k=1; z.tx=0; z.ty=0; apply(); },
+    step(f){ zoomAt(surface.clientWidth/2,surface.clientHeight/2,f); },
+    relayout(){ apply(); }
+  };
+}
+
+/* Zoom buttons, shared markup. */
+function zoomControls(ctrl){
+  const box=el("div","zoomctl");
+  [["+","Zoom in",()=>ctrl.step(1.4)],
+   ["−","Zoom out",()=>ctrl.step(1/1.4)],
+   ["⟲","Reset view",()=>ctrl.reset()]].forEach(([t,label,fn])=>{
+    const b=el("button",null,t); b.type="button"; b.title=label; b.setAttribute("aria-label",label);
+    b.addEventListener("click",e=>{ e.stopPropagation(); fn(); });
+    box.appendChild(b);
+  });
+  return box;
+}
+
+/* ---------- label collision control ----------
+   Greedy: walk the nodes in importance order and keep a label only if its box
+   clears every label already kept. Everything dropped is still reachable on
+   hover. Standard cartographic approach — keeps the page scannable instead of
+   hiding all information behind a pointer. */
+function deconflict(items,pad=3,tries=0){
+  if(!items.length) return;
+  const probe=items[0].label;
+  if(!probe) return;
+  // Labels suppressed by the narrow-viewport media query have no box and never
+  // will — nothing to deconflict. Bail rather than retrying forever.
+  if(getComputedStyle(probe).display==="none") return;
+  // Otherwise a zero-width box means layout has not settled. Retry a few
+  // frames, then give up so this can never spin.
+  if(!probe.getBoundingClientRect().width){
+    if(tries<5) requestAnimationFrame(()=>deconflict(items,pad,tries+1));
+    return;
+  }
+  const kept=[];
+  items.forEach(({label,host})=>{
+    if(!label) return;
+    label.style.visibility="visible";
+    host.classList.remove("nolabel");
+    const r=label.getBoundingClientRect();
+    if(!r.width) return;
+    const box=[r.left-pad,r.top-pad,r.right+pad,r.bottom+pad];
+    const clash=kept.some(k=>!(box[2]<k[0]||box[0]>k[2]||box[3]<k[1]||box[1]>k[3]));
+    if(clash){ label.style.visibility="hidden"; host.classList.add("nolabel"); }
+    else kept.push(box);
+  });
+}
+
+/* Theme hues are tuned for fills and borders. As text on a dark ground the
+   darker ones fall under 3:1, so anything used as type gets mixed toward
+   white first. Keeps the palette identity, fixes legibility. */
+function lite(hex,amt=0.34){
+  const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex||"");
+  if(!m) return hex;
+  const mix=v=>Math.round(parseInt(v,16)+(255-parseInt(v,16))*amt);
+  return `rgb(${mix(m[1])},${mix(m[2])},${mix(m[3])})`;
+}
+
+const money = b => b>=1000 ? "$"+(b/1000).toFixed(2).replace(/\.?0+$/,"")+"T"
+                 : b>=1     ? "$"+(b%1===0?b:b.toFixed(b<10?2:1)).toString().replace(/\.?0+$/,"")+"B"
+                 : b>0      ? "$"+Math.round(b*1000)+"M" : "—";
+const initials = n => n.replace(/[^A-Za-z& ]/g,"").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+
+function seed(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; }
+function rng(s){ let x=s||1; return ()=>{ x^=x<<13;x>>>=0; x^=x>>17; x^=x<<5;x>>>=0; return x/4294967296; }; }
+
+/* Generated marks are deterministic, so paint each one once and reuse the
+   bitmap. Without this the page repaints ~180 canvases on every filter
+   keystroke, which stalls hard inside a sandboxed frame. */
+const MARK_CACHE=new Map();
+function paintCached(cv,key,size,draw){
+  const dpr=Math.min(devicePixelRatio||1,2);
+  const ck=key+"|"+size+"|"+dpr;
+  let src=MARK_CACHE.get(ck);
+  if(!src){
+    src=document.createElement("canvas");
+    src.width=size*dpr; src.height=size*dpr;
+    draw(src.getContext("2d"),dpr);
+    MARK_CACHE.set(ck,src);
+  }
+  cv.width=size*dpr; cv.height=size*dpr;
+  cv.style.width=size+"px"; cv.style.height=size+"px";
+  cv.getContext("2d").drawImage(src,0,0);
+}
+
+/* Procedural venture sigil — instrument, not logo. */
+function sigil(cv,name,hue,size){
+  paintCached(cv,"s:"+name+":"+hue,size,(g,dpr)=>drawSigil(g,dpr,name,hue,size));
+}
+function drawSigil(g,dpr,name,hue,size){
+  g.scale(dpr,dpr);
+  const r=rng(seed(name)), c=size/2;
+  g.fillStyle="#0b0e18"; g.fillRect(0,0,size,size);
+  const ticks=16+Math.floor(r()*14);
+  for(let i=0;i<ticks;i++){
+    const a=(i/ticks)*Math.PI*2, len=size*(0.06+r()*0.16), rad=size*0.44;
+    g.strokeStyle=hue; g.globalAlpha=0.16+r()*0.44; g.lineWidth=size*0.022;
+    g.beginPath(); g.moveTo(c+Math.cos(a)*(rad-len),c+Math.sin(a)*(rad-len));
+    g.lineTo(c+Math.cos(a)*rad,c+Math.sin(a)*rad); g.stroke();
+  }
+  const arcs=2+Math.floor(r()*3);
+  for(let i=0;i<arcs;i++){
+    const rad=size*(0.13+i*0.09+r()*0.03), st=r()*Math.PI*2, sw=(0.5+r()*1.5)*Math.PI;
+    g.globalAlpha=0.55+r()*0.4; g.strokeStyle=hue; g.lineWidth=size*(0.02+r()*0.03);
+    g.beginPath(); g.arc(c,c,rad,st,st+sw); g.stroke();
+  }
+  g.globalAlpha=1; g.fillStyle=hue;
+  g.beginPath(); g.arc(c,c,size*0.052,0,Math.PI*2); g.fill();
+  g.globalAlpha=.85;
+  for(let i=0;i<7;i++){ if(r()>0.42) g.fillRect(size*0.11+i*size*0.11,size*0.885,size*0.062,size*0.028); }
+  g.globalAlpha=1;
+}
+function portrait(cv,name,size){
+  paintCached(cv,"p:"+name,size,(g,dpr)=>drawPortrait(g,dpr,name,size));
+}
+function drawPortrait(g,dpr,name,size){
+  g.scale(dpr,dpr);
+  const r=rng(seed(name)), c=size/2;
+  const hues=["#f0a53c","#9b8cff","#2fb8c9","#5fd39a","#e07ab8","#7aa2f7","#d4a373","#a8b53c"];
+  const grd=g.createLinearGradient(0,0,size,size);
+  grd.addColorStop(0,hues[Math.floor(r()*hues.length)]);
+  grd.addColorStop(1,hues[Math.floor(r()*hues.length)]);
+  g.fillStyle="#141a2c"; g.beginPath(); g.arc(c,c,c,0,Math.PI*2); g.fill();
+  g.globalAlpha=.30; g.fillStyle=grd; g.beginPath(); g.arc(c,c,c,0,Math.PI*2); g.fill();
+  g.globalAlpha=.9; g.strokeStyle=grd; g.lineWidth=size*0.045;
+  const st=r()*Math.PI*2;
+  g.beginPath(); g.arc(c,c,c*0.82,st,st+(0.8+r()*1.6)*Math.PI); g.stroke();
+  g.globalAlpha=1; g.fillStyle="#e6ecff";
+  g.font=`600 ${size*0.34}px "Cascadia Mono",ui-monospace,monospace`;
+  g.textAlign="center"; g.textBaseline="middle";
+  g.fillText(initials(name),c,c+size*0.02);
+}
+
+/* ============================================================
+   DERIVED — conviction and the emergence index
+   ============================================================ */
+const NOW = 2026.59;
+
+/* One pass over everything, so a mega-seed carried in from an earlier data
+   file is corrected too — not just the rows that arrived with a `raise`. */
+VENTURES.forEach(v=>{ v.m = trueMaturity(v.m, v.raise, v.v); });
+
+/* Involvement: how a position is held, not just that it is held. */
+function roleOf(vid,oid){
+  const raw=(ROLES[vid]||{})[oid]||"capital";
+  const past=raw.endsWith("|past");
+  const key=past?raw.split("|")[0]:raw;
+  const def=ROLE_DEF[key]||ROLE_DEF.capital;
+  return {key,past,def,w:def.w*(past?0.5:1)};
+}
+VENTURES.forEach(v=>{
+  v.pos = v.backers.map(id=>({op:id, ...roleOf(v.id,id)}));
+  // Classify by the role itself (def.w) so a relinquished chairmanship still
+  // reads as a deep involvement; score with the discounted weight (p.w).
+  v.deep = v.pos.filter(p=>p.def.w>=3).sort((a,b)=>b.w-a.w);
+  v.commit = v.pos.reduce((s,p)=>s+p.w,0);
+});
+OPERATORS.forEach(o=>{
+  o.book = VENTURES.filter(v=>v.backers.includes(o.id));
+  o.themes = [...new Set(o.book.map(v=>v.theme))];
+  o.exposure = o.book.reduce((s,v)=>s+v.v,0);
+  o.roles = o.book.map(v=>({v, ...roleOf(v.id,o.id)})).sort((a,b)=>b.w-a.w);
+  o.deepRoles = o.roles.filter(r=>r.def.w>=3);
+  o.builtCount = o.roles.filter(r=>r.def.w>=4).length;
+  o.commit = o.roles.reduce((s,r)=>s+r.w,0);
+});
+
+THEMES.forEach(t=>{
+  t.cos = VENTURES.filter(v=>v.theme===t.id);
+  t.ops = [...new Set(t.cos.flatMap(v=>v.backers))];
+  t.conviction = t.ops.length;
+  t.cap = t.cos.reduce((s,v)=>s+v.v,0);
+  t.attention = t.cos.reduce((s,v)=>s+v.commit,0);
+  t.deepOps = [...new Set(t.cos.flatMap(v=>v.deep.map(p=>p.op)))].length;
+
+  /* --- emergence: six independent indicators of earliness --- */
+  const cos = t.cos.filter(c=>c.v>0);
+  const n = cos.length || 1;
+
+  // 1. stage centroid — seed-weighted themes are earlier
+  const avgM = cos.reduce((s,c)=>s+c.m,0)/n;
+  const fStage = clamp(100*(1-(avgM-1)/6));
+
+  // 2. median valuation on a log scale — cheap despite conviction is early
+  const vals = cos.map(c=>c.v).sort((a,b)=>a-b);
+  const med = vals.length ? vals[Math.floor(vals.length/2)] : 1;
+  const lo=Math.log10(0.1), hi=Math.log10(500);
+  const fPrice = clamp(100*(1-(Math.log10(Math.max(0.1,med))-lo)/(hi-lo)));
+
+  // 3. capital recency — share of all disclosed money raised in trailing 12m
+  const rs = cos.flatMap(c=>(c.rounds||[]).filter(r=>r[1]>0));
+  const tot = rs.reduce((s,r)=>s+r[1],0);
+  const rec = rs.filter(r=>r[0]>=NOW-1).reduce((s,r)=>s+r[1],0);
+  const fRecent = tot ? clamp(100*rec/tot) : 0;
+
+  // 4. operator-run density — how much of the involvement here is time, not money.
+  //    Every position scores its role weight above the capital baseline, so a
+  //    chairmanship counts three times a cheque and a chief executive five times.
+  const posn = cos.reduce((s,c)=>s+c.pos.length,0);
+  const above= cos.reduce((s,c)=>s+c.pos.reduce((a,p)=>a+(p.w-1),0),0);
+  const fBuilt = posn ? clamp(100*(above/(posn*3))) : 0;
+
+  // 5. pre-institutional — crossover and sovereign money has not arrived
+  const fInst = clamp(100*(1 - cos.filter(c=>c.cross).length/n));
+
+  // 6. no listed pure-play to buy instead
+  const fProxy = t.proxy ? 0 : 100;
+
+  t.factors = [
+    ["Stage",             fStage,  "Weighted toward seed and Series A rather than late rounds"],
+    ["Price",             fPrice,  "Median valuation still low in absolute terms"],
+    ["Recency",           fRecent, "Share of all disclosed capital raised in the last twelve months"],
+    ["Operator-run",      fBuilt,  "Involvement weighted by role depth — operators running, chairing or sitting on boards here, not merely funding"],
+    ["Pre-institutional", fInst,   "Crossover and sovereign investors have not arrived yet"],
+    ["No public proxy",   fProxy,  "No listed pure-play comparable you could buy instead"]
+  ];
+  t.emergence = 0.20*fStage + 0.20*fPrice + 0.20*fRecent + 0.15*fBuilt + 0.15*fInst + 0.10*fProxy;
+  t.grade = t.emergence>=55 ? "early" : t.emergence>=38 ? "mid" : "late";
+});
+
+/* ============================================================
+   NICHES — the same scoring, applied one level down
+   ============================================================ */
+VENTURES.forEach(v=>{
+  const hay = `${v.name} · ${v.tag} · ${v.what||""}`;
+  let ns = NICHE_OVERRIDE[v.id] ? [...NICHE_OVERRIDE[v.id]] : [];
+  if(!ns.length){
+    NICHE_RULES.forEach(([id,re])=>{ if(ns.length<2 && NICHES[id] && NICHES[id].t===v.theme && re.test(hay)) ns.push(id); });
+  }
+  v.niches = ns.filter(n=>NICHES[n]);
+});
+
+const NICHE_LIST = Object.entries(NICHES).map(([id,d])=>{
+  const cos = VENTURES.filter(v=>v.niches.includes(id));
+  const priced = cos.filter(c=>c.v>0);
+  const cap = cos.reduce((s,c)=>s+c.v,0);
+  const ops = [...new Set(cos.flatMap(c=>c.backers))];
+  const rs  = cos.flatMap(c=>(c.rounds||[]).filter(r=>r[1]>0));
+  const tot = rs.reduce((s,r)=>s+r[1],0);
+  const rec = rs.filter(r=>r[0]>=NOW-1).reduce((s,r)=>s+r[1],0);
+  const prev= rs.filter(r=>r[0]>=NOW-2&&r[0]<NOW-1).reduce((s,r)=>s+r[1],0);
+
+  /* Herfindahl concentration: share of niche capital in each company, squared
+     and summed. 1.0 = one company is the whole niche (a winner has emerged).
+     Low = still contested. This is the oversaturation / consolidation read. */
+  const hhi = cap>0 ? priced.reduce((s,c)=>s+Math.pow(c.v/cap,2),0) : 0;
+
+  /* acceleration: trailing-12m capital against the 12m before it */
+  const accel = prev>0 ? rec/prev : (rec>0 ? 3 : 0);
+
+  const avgM = priced.length ? priced.reduce((s,c)=>s+c.m,0)/priced.length
+                             : (cos.length ? cos.reduce((s,c)=>s+c.m,0)/cos.length : 4);
+  const vals = priced.map(c=>c.v).sort((a,b)=>a-b);
+  const med  = vals.length ? vals[Math.floor(vals.length/2)] : 0.3;
+  const lo=Math.log10(0.1), hi=Math.log10(500);
+
+  const fStage  = clamp(100*(1-(avgM-1)/6));
+  const fPrice  = clamp(100*(1-(Math.log10(Math.max(0.1,med))-lo)/(hi-lo)));
+  const fRecent = tot ? clamp(100*rec/tot) : 50;
+  const posn = cos.reduce((s,c)=>s+c.pos.length,0);
+  const above= cos.reduce((s,c)=>s+c.pos.reduce((a,p)=>a+(p.w-1),0),0);
+  const fBuilt  = posn ? clamp(100*(above/(posn*3))) : 0;
+  const fInst   = clamp(100*(1-cos.filter(c=>c.cross).length/Math.max(1,cos.length)));
+  const fProxy  = T[d.t] && T[d.t].proxy ? 0 : 100;
+  const emergence = 0.20*fStage+0.20*fPrice+0.20*fRecent+0.15*fBuilt+0.15*fInst+0.10*fProxy;
+
+  /* Lifecycle phase — the answer to "is this heating up or crowded?"
+     Concentration and acceleration are meaningless below three companies, so
+     anything smaller is reported as Nascent rather than given a false reading. */
+  let phase, phaseNote;
+  if(cos.length<3)                       { phase="Nascent";      phaseNote="Too few companies to read a trend"; }
+  else if(hhi>0.6 && accel<1)            { phase="Settled";      phaseNote="One company dominates and capital is slowing"; }
+  else if(hhi>0.6)                       { phase="Consolidating";phaseNote="A clear leader has emerged"; }
+  else if(cos.length>=5 && accel<0.8)    { phase="Crowded";      phaseNote="Many entrants, capital decelerating"; }
+  else if(accel>=1.5)                    { phase="Heating";      phaseNote="Capital accelerating year on year"; }
+  else                                   { phase="Contested";    phaseNote="No winner yet, steady funding"; }
+
+  /* Additional quantitative reads, all derived rather than asserted. */
+  const amts   = rs.map(r=>r[1]).sort((a,b)=>a-b);
+  const medRnd = amts.length ? amts[Math.floor(amts.length/2)] : 0;      // capital intensity, $M
+  const firstY = rs.length ? Math.min(...rs.map(r=>r[0])) : null;         // when money first arrived
+  const ageY   = firstY ? NOW-firstY : null;
+  const velo   = rs.filter(r=>r[0]>=NOW-2).length/2;                      // rounds per year, 2yr window
+  const capPer = cos.length ? cap/cos.length : 0;                         // $B per company
+  const backerHHI = (()=>{                                                // is one backer carrying it?
+    const tally={}; cos.forEach(c=>c.backers.forEach(b=>tally[b]=(tally[b]||0)+1));
+    const tot=Object.values(tally).reduce((s,x)=>s+x,0);
+    return tot? Object.values(tally).reduce((s,x)=>s+Math.pow(x/tot,2),0) : 0;
+  })();
+
+  /* Momentum on a log scale so a niche going from near-zero to large does not
+     produce a meaningless five-thousand-percent figure. 0 = flat year on year. */
+  const momentum = prev>0 ? Math.max(-2,Math.min(3,Math.log2(rec/prev)))
+                          : (rec>0 ? 3 : -2);
+
+  return {id, name:d.n, t:d.t, cos, cap, ops, emergence, hhi, accel, phase, phaseNote,
+          count:cos.length, recent:rec, prior:prev,
+          medRnd, ageY, velo, capPer, backerHHI, momentum};
+}).filter(x=>x.count>0);
+
+const ranked  = [...THEMES].sort((a,b)=> b.conviction-a.conviction || b.cap-a.cap);
+const maxConv = Math.max(...THEMES.map(t=>t.conviction));
+const medConv = [...THEMES].map(t=>t.conviction).sort((a,b)=>a-b)[Math.floor(THEMES.length/2)];
+const medEm   = [...THEMES].map(t=>t.emergence).sort((a,b)=>a-b)[Math.floor(THEMES.length/2)];
+/* the headline: highest conviction among themes that are still early */
+const nextThing = [...THEMES].filter(t=>t.emergence>=medEm).sort((a,b)=>b.conviction-a.conviction||b.emergence-a.emergence)[0];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const S = { view:"brief", q:"", themes:new Set(), regions:new Set(), kinds:new Set(), stages:new Set(), nphase:null, nReadable:false, op:null, open:new Set([ranked[0].id]) };
+
+const matches = v => {
+  if(S.themes.size && !S.themes.has(v.theme)) return false;
+  if(S.regions.size && !(v.hub && S.regions.has(HUBS[v.hub].r))) return false;
+  if(S.stages.size && !S.stages.has(stageBucket(v.m))) return false;
+  if(S.kinds.size && !v.backers.some(b=>O[b] && S.kinds.has(O[b].kind))) return false;
+  if(S.op && !v.backers.includes(S.op)) return false;
+  if(S.q){
+    const hay=(v.name+" "+v.tag+" "+v.what+" "+v.why+" "+v.others+" "+T[v.theme].name+" "+(v.hub?HUBS[v.hub].n:"")+" "+
+               v.backers.map(b=>O[b].name).join(" ")).toLowerCase();
+    if(!hay.includes(S.q)) return false;
+  }
+  return true;
+};
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function readouts(){
+  const vis = VENTURES.filter(matches);
+  $("#r-ops").textContent = S.op ? "1 / "+OPERATORS.length : OPERATORS.length;
+  $("#r-cos").textContent = vis.length;
+  $("#r-cap").textContent = money(vis.reduce((s,v)=>s+v.v,0));
+  $("#r-next").textContent = nextThing ? nextThing.name.split(" ")[0].replace("&","") : "—";
+}
+
+function vcard(v){
+  const t=T[v.theme];
+  const b=el("button","vcard"); b.type="button"; b.style.setProperty("--hue",t.hue);
+  const cv=el("canvas"); cv.setAttribute("aria-hidden","true"); b.appendChild(cv);
+  const w=el("div","vcard-b");
+  w.innerHTML =
+    `<h4>${v.name}</h4><span class="tag">${v.tag}</span>
+     <div class="vrow">
+       <span class="val">${v.listed?"Listed":v.v>0?money(v.v):v.undisclosed?"Undisclosed":"Non-profit"}</span>
+       <span class="${v.listed?"listedchip":"stagechip"+(v.rep?" reported":"")}">${v.listed?v.stage:v.rep?"Reported":v.stage}</span>
+       ${v.ent?`<span class="entchip">${ENT_LABEL[v.ent]}</span>`:""}
+       ${v.stateCap?`<span class="statechip" title="State or sovereign capital on the cap table">State</span>`:""}
+       ${v.v>0&&v.conf==="low"?`<span class="confchip low" title="${(v.caveat||"Low confidence in this figure").replace(/"/g,"&quot;")}">Low conf.</span>`:""}
+       ${v.deep.length?`<span class="rolebadge" style="--rw:${ROLE_HUE[v.deep[0].key]}">${ROLE_DEF[v.deep[0].key].short} · ${O[v.deep[0].op].name.split(" ").slice(-1)[0]}${v.deep[0].past?" (past)":""}</span>`:""}
+     </div>`;
+  const f=el("div","faces");
+  v.backers.slice(0,5).forEach(id=>f.appendChild(el("div","face",initials(O[id].name))));
+  if(v.backers.length>5) f.appendChild(el("div","face more","+"+(v.backers.length-5)));
+  if(!v.backers.length) f.appendChild(el("div","face","—"));
+  w.appendChild(f); b.appendChild(w);
+  b.addEventListener("click",()=>openVenture(v.id));
+  sigil(cv,v.name,t.hue,52);
+  return b;
+}
+
+function renderBands(){
+  const host=$("#bands"); host.innerHTML=""; let shown=0;
+  ranked.forEach((t,i)=>{
+    const cos=t.cos.filter(matches); if(!cos.length) return; shown++;
+    const band=el("div","band"+(S.open.has(t.id)?" open":"")); band.style.setProperty("--hue",t.hue);
+    const head=el("button","band-head"); head.type="button";
+    head.setAttribute("aria-expanded",S.open.has(t.id)?"true":"false");
+    const left=el("div");
+    left.innerHTML=
+      `<div class="band-title">
+         <span class="band-rank">R${String(i+1).padStart(2,"0")}</span>
+         <h3>${t.name}</h3>
+         <span class="emtag ${t.grade}">${t.grade==="early"?"Emergent":t.grade==="mid"?"Building":"Mature"} · ${Math.round(t.emergence)}</span>
+       </div>
+       <p class="band-sub">${t.blurb}</p>`;
+    const right=el("div","band-metrics");
+    right.innerHTML=
+      `<div class="metric"><b>${cos.length}</b><span>Ventures</span></div>
+       <div class="metric"><b>${money(t.cap)}</b><span>Tracked value</span></div>
+       <div class="metric"><b style="color:${lite(t.hue)}">${t.conviction}</b><span>Conviction</span>
+         <div class="conv">${Array.from({length:maxConv},(_,k)=>`<i class="${k<t.conviction?"on":""}"></i>`).join("")}</div>
+       </div>
+       <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
+    head.append(left,right);
+    head.addEventListener("click",()=>{ S.open.has(t.id)?S.open.delete(t.id):S.open.add(t.id); renderBands(); });
+    const body=el("div","band-body"), grid=el("div","vgrid");
+    cos.sort((a,b)=>b.v-a.v).forEach(v=>grid.appendChild(vcard(v)));
+    body.appendChild(grid); band.append(head,body); host.appendChild(band);
+  });
+  if(!shown) host.appendChild(el("div","empty","No themes match those filters."));
+}
+
+function renderGrad(){
+  $("#grad").innerHTML = `<span class="lbl">Graduated off the board</span>` +
+    GRADUATED.map(x=>`<span class="item"><b>${x.n}</b> · ${x.d} <span style="color:var(--ink-4)">— ${x.note}</span></span>`).join("");
+}
+
+/* ---------- horizon ---------- */
+function renderHorizon(){
+  const q=$("#quad");
+  q.querySelectorAll(".qdot,.qsplit,.qlabel").forEach(n=>n.remove());
+  const emX = e => 6 + (e/100)*88;                      // % across
+  const cvY = c => 94 - (c/Math.max(1,maxConv))*86;     // % down (inverted)
+
+  const vs=el("div","qsplit v"); vs.style.left=emX(medEm)+"%"; q.appendChild(vs);
+  const hs=el("div","qsplit h"); hs.style.top=cvY(medConv)+"%"; q.appendChild(hs);
+
+  const quads=[
+    {cls:"hot",  css:"right:12px;top:10px;text-align:right", t:"Emerging consensus", s:"High belief, still early — the next thing"},
+    {cls:"",     css:"left:12px;top:10px",                   t:"Mainstream",         s:"High belief, already priced"},
+    {cls:"",     css:"right:12px;bottom:10px;text-align:right",t:"Frontier fringe",  s:"Early, few believers — too soon or wrong"},
+    {cls:"",     css:"left:12px;bottom:10px",                 t:"Mature niche",      s:"Settled, narrow, low urgency"}
+  ];
+  quads.forEach(x=>{ const l=el("div","qlabel "+x.cls,`<b>${x.t}</b>${x.s}`); l.style.cssText=x.css; q.appendChild(l); });
+
+  const maxCap=Math.max(...THEMES.map(t=>t.cap));
+  const qplaced=[];
+  THEMES.forEach(t=>{
+    const x=emX(t.emergence), y=cvY(t.conviction);
+    const d=el("button","qdot"+(x>62?" flip":"")); d.type="button";
+    d.style.cssText=`left:${x}%;top:${y}%;--hue:${t.hue};--sz:${(10+22*Math.sqrt(t.cap/maxCap)).toFixed(1)}px`;
+    d.innerHTML=`<span class="bead"></span><span class="lbl">${t.name}</span>`;
+    TIP.bind(d,
+      `<b>${t.name}</b><span class="tsub">${t.grade==="early"?"Emergent":t.grade==="mid"?"Building":"Mature"}</span>
+       <div class="trow"><span>Operators</span><b>${t.conviction}</b></div>
+       <div class="trow"><span>Emergence</span><b>${Math.round(t.emergence)}</b></div>
+       <div class="trow"><span>Ventures</span><b>${t.cos.length}</b></div>
+       <div class="trow"><span>Tracked value</span><b>${money(t.cap)}</b></div>`);
+    d.setAttribute("aria-label",`${t.name} — ${t.conviction} operators, emergence ${Math.round(t.emergence)}`);
+    d.addEventListener("click",()=>openTheme(t.id));
+    q.appendChild(d);
+    qplaced.push({label:d.querySelector(".lbl"),host:d,w:t.cap});
+  });
+  deconflict(qplaced.sort((a,b)=>b.w-a.w));
+
+  /* The verdict: themes in the upper-right quadrant — believed and still early. */
+  const winners=[...THEMES].filter(t=>t.emergence>=medEm && t.conviction>=medConv)
+                           .sort((a,b)=>b.conviction-a.conviction||b.emergence-a.emergence);
+  const vh=$("#verdict");
+  vh.innerHTML=`<span class="eyebrow">Upper-right quadrant — believed, not yet priced</span>
+    <div class="verdict-list">${winners.map(t=>
+      `<button class="vpill" type="button" data-t="${t.id}" style="--hue:${t.hue}">
+         <b>${t.name}</b><span>${t.conviction} ops · em ${Math.round(t.emergence)} · ${money(t.cap)}</span>
+       </button>`).join("") || '<span style="color:var(--ink-4);font-family:var(--font-mono);font-size:12px">No theme clears both medians under the current filters.</span>'}</div>
+    <p>These clear the median on <b>both</b> axes: more operators than half the board believes in them, and they are still earlier than half the board by stage, price, capital recency and institutional presence. For contrast, <b>${ranked[0].name}</b> carries ${ranked[0].conviction} operators — the highest conviction here by a distance — but scores only ${Math.round(ranked[0].emergence)} on emergence. It is the consensus, not the edge.</p>`;
+  vh.querySelectorAll(".vpill").forEach(b=>b.addEventListener("click",()=>openTheme(b.dataset.t)));
+
+  const rows=[...THEMES].sort((a,b)=>b.emergence-a.emergence);
+  $("#ftab").innerHTML =
+    "<thead><tr><th>Theme</th><th>Emergence</th>" +
+    rows[0].factors.map(f=>`<th title="${f[2]}">${f[0]}</th>`).join("") +
+    "<th>Conviction</th><th title=\"Ventures on the board in this theme. Themes with few companies produce noisier scores — discount accordingly.\">n</th></tr></thead><tbody>" +
+    rows.map(t=>
+      `<tr style="--hue:${t.hue}"><th>${t.name}</th>
+        <td><span class="fscore" style="color:${lite(t.hue)}">${Math.round(t.emergence)}</span>
+            <span class="fnum">${t.grade==="early"?"emergent":t.grade==="mid"?"building":"mature"}</span></td>` +
+      t.factors.map(f=>`<td><div class="fbar"><i style="width:${f[1].toFixed(0)}%"></i></div><span class="fnum">${Math.round(f[1])}</span></td>`).join("") +
+      `<td><span class="fnum" style="font-size:13px;color:var(--ink-2)">${t.conviction} ops</span></td>
+       <td><span class="fnum" style="font-size:13px;color:${t.cos.length<4?"var(--warn)":"var(--ink-3)"}">${t.cos.length}${t.cos.length<4?" ⚠":""}</span></td></tr>`
+    ).join("") + "</tbody>";
+}
+
+/* ---------- commitment ---------- */
+/* Stage buckets over the normalised maturity field. The raw stage labels are
+   unusable for filtering — 44 distinct strings across the board, from "Seed"
+   to "Consortium JV" — so everything keys off `m` (1 = pre-seed, 7 = pre-IPO). */
+const STAGE_BUCKETS=[
+  ["early", "Pre-seed & Seed", "#5fd39a", m=>m<=1],
+  ["a",     "Series A",        "#4fd6b0", m=>m===2],
+  ["bc",    "Series B–C",      "#7aa2f7", m=>m>=3&&m<=4],
+  ["growth","Series D+",       "#b98ae0", m=>m>=5&&m<=6],
+  ["late",  "Pre-IPO & Listed","#7a88ad", m=>m>=7]
+];
+const stageBucket = m => (STAGE_BUCKETS.find(b=>b[3](m||4))||STAGE_BUCKETS[2])[0];
+
+/* A seed label no longer implies an early company. Unconventional AI raised
+   $475M at $4.5B and called it a seed; AMI Labs raised ~$1B at seed. Median
+   seed in this cohort is ~$16M against a ~$60M mean, so the label alone would
+   score four mega-rounds as maximally early and drag the whole index with it.
+   Maturity is therefore derived from substance — money raised and price paid —
+   and only ever adjusted upward, never down. */
+function trueMaturity(m,raiseM,valB){
+  if(!m||m>2) return m;                                   // only seed labels
+  if((valB||0)>=1 || (raiseM||0)>=150) return 4;          // functionally growth
+  if((valB||0)>=0.3 || (raiseM||0)>=50)  return 3;        // functionally Series B
+  if((raiseM||0)>=20) return 2;                           // functionally Series A
+  return m;
+}
+
+const KINDS=[["builder","Founders",""+"#5fd39a"],["allocator","Solo investors","#f0a53c"],["fund","Funds","#7aa2f7"]];
+const KIND_HUE={builder:"#5fd39a",allocator:"#f0a53c",fund:"#7aa2f7"};
+const KIND_LBL={builder:"Founder",allocator:"Investor",fund:"Fund"};
+const ROLE_HUE={ceo:"#5fd39a",founder:"#4fd6b0",chair:"#f0a53c",board:"#7aa2f7",advisor:"#b98ae0",capital:"var(--ink-4)"};
+
+/* ---------- brief ----------
+   Every figure below is computed from the dataset so the narrative cannot
+   drift out of step with the data. Only the argument is hand-written. */
+function renderBrief(){
+  const priv   = VENTURES.filter(v=>!v.listed);
+  const cap    = priv.reduce((s,v)=>s+v.v,0);
+  const consensus = ranked[0];                                     // most operators
+  const emergent  = [...THEMES].sort((a,b)=>b.emergence-a.emergence);
+  const winners   = [...THEMES].filter(t=>t.emergence>=medEm && t.conviction>=medConv)
+                               .sort((a,b)=>b.conviction-a.conviction||b.emergence-a.emergence);
+  const unbuyable = [...THEMES].filter(t=>EXPOSURE[t.id] && EXPOSURE[t.id].q===0)
+                               .sort((a,b)=>b.conviction-a.conviction);
+  const mostHeld  = [...VENTURES].sort((a,b)=>b.backers.length-a.backers.length)[0];
+  const builders  = OPERATORS.filter(o=>o.kind==="builder").length;
+  const undisc    = VENTURES.filter(v=>v.undisclosed).length;
+  const cn        = VENTURES.filter(v=>v.hub&&HUBS[v.hub].r==="cn");
+  const cnShare   = cap? (cn.reduce((s,v)=>s+v.v,0)/cap*100) : 0;
+
+  /* correlation between buyability and emergence, recomputed here */
+  const ex=[...THEMES].filter(t=>EXPOSURE[t.id]);
+  const qs=ex.map(t=>EXPOSURE[t.id].q), es=ex.map(t=>t.emergence);
+  const mean=a=>a.reduce((s,x)=>s+x,0)/a.length, mq=mean(qs), me=mean(es);
+  const rr=(qs.reduce((s,q,i)=>s+(q-mq)*(es[i]-me),0))/
+           (Math.sqrt(qs.reduce((s,q)=>s+(q-mq)**2,0))*Math.sqrt(es.reduce((s,e)=>s+(e-me)**2,0)));
+
+  const regionCount = new Set(VENTURES.filter(v=>v.hub).map(v=>HUBS[v.hub].r)).size;
+  const stateN = VENTURES.filter(v=>v.stateCap).length;
+  const naShare = priv.length ? VENTURES.filter(v=>v.hub&&HUBS[v.hub].r==="na").length/priv.length*100 : 0;
+
+  $("#brief-lede").innerHTML =
+    `${OPERATORS.length} backers, ${priv.length} private companies, ${THEMES.length} themes across ${regionCount} world
+     regions — assembled from who is funding what rather than from sector reports. <b>${consensus.name}</b> has the most
+     believers on this board and the least room left in it. The themes where these people commit time rather than money,
+     and where you cannot buy in at any price, are somewhere else entirely.`;
+
+  $("#brief-stats").innerHTML = [
+    [OPERATORS.length, "Operators tracked", `${builders} build or run things; the rest allocate`],
+    [priv.length,      "Private ventures",  `${undisc} have never disclosed a valuation`],
+    [money(cap),       "Tracked value",     "Last known post-money, private only"],
+    [Math.round(emergent[0].emergence), "Top emergence score", emergent[0].name],
+    [rr.toFixed(2),    "Buyability ↔ earliness", "Negative: the more buyable, the less early"]
+  ].map(([b,s,i])=>`<div class="bstat"><b>${b}</b><span>${s}</span><i>${i}</i></div>`).join("");
+
+  $("#brief-main").innerHTML = `
+    <section>
+      <h3>Where the consensus already is</h3>
+      <p><b>${consensus.name}</b> carries <span class="num">${consensus.conviction}</span> of the ${OPERATORS.length}
+      tracked backers — more than any other theme by a wide margin — but scores only
+      <span class="num">${Math.round(consensus.emergence)}</span> on emergence. Anthropic and OpenAI are now the two
+      most valuable private companies on earth and both have filed confidentially to list.</p>
+      <p>That combination is the whole point of separating the two axes. When a theme's leaders are filing S-1s, the
+      belief is real but the asymmetry is gone. Everyone already knows.</p>
+    </section>
+    <section>
+      <h3>What the intelligence trade drags with it</h3>
+      <p>The second-order effects are more interesting than the labs. Every model needs electricity, so the people
+      building the models are personally funding the power — Altman chairs a fusion company and chaired a fission one
+      from Y Combinator to the NYSE. Every model wants a body, so robot foundation models raise billion-dollar rounds
+      with no robot attached. And every model needs something to discover, which is why autonomous laboratories went
+      from nothing to a priced category inside eighteen months.</p>
+      <p>Read the board as a dependency graph and energy, silicon, robotics and AI-for-science are all downstream of
+      one bet, funded by the same people, hedging their own thesis.</p>
+    </section>
+    <section>
+      <h3>Who is actually paying for it</h3>
+      <p>The board began as a map of what technology billionaires fund. It is no longer only that.
+      <span class="num">${stateN}</span> of ${priv.length} ventures — roughly ${Math.round(stateN/priv.length*100)}% —
+      carry sovereign or state capital. National, provincial and municipal funds anchor rounds across China, and the
+      same pattern now holds in Japan, Korea, India, Australia and Europe.</p>
+      <p>That changes how a backer list should be read. Where a state fund leads, the valuation reflects industrial
+      policy, land and subsidy rather than a competitive auction, and eleven entities here are not venture-backed
+      companies at all — they are government programmes with a valuation attributed to them by the press. The board
+      flags both, because treating a PIF programme budget as a priced round would corrupt every number above it.</p>
+    </section>
+    <section>
+      <h3>Where the horizon actually is</h3>
+      <p>These clear the median on <b>both</b> axes — more believers than half the board, and still earlier than half
+      the board on stage, price, capital recency and institutional presence.</p>
+      <div class="hcards">
+        ${winners.slice(0,4).map((t,i)=>`
+          <button class="hcard" type="button" data-t="${t.id}" style="--hue:${t.hue}">
+            <span class="hpos">${String(i+1).padStart(2,"0")}</span>
+            <span><span class="hn">${t.name}</span><span class="hd">${t.blurb.split(".")[0]}.</span></span>
+            <span class="hm"><b>${t.conviction} ops</b>em ${Math.round(t.emergence)}<br>${money(t.cap)}</span>
+          </button>`).join("")}
+      </div>
+    </section>`;
+  $("#brief-main").querySelectorAll(".hcard").forEach(b=>b.addEventListener("click",()=>openTheme(b.dataset.t)));
+
+  const findings = [
+    `Buyability and earliness are inversely correlated at <span class="hot">r = ${rr.toFixed(2)}</span>. A listed
+     pure-play appearing <b>is</b> the moment a theme stops being early — which is why the best ideas here are the
+     ones you cannot act on.`,
+    unbuyable.length ? `<b>${unbuyable.map(t=>t.name).join("</b> and <b>")}</b> have <span class="hot">zero</span>
+     listed exposure of any kind. No pure-play, no targeted fund. They also carry some of the deepest founder
+     involvement on the board — people are building these rather than funding them.` : "",
+    `<b>${mostHeld.name}</b> is the most co-invested company here, with <span class="hot">${mostHeld.backers.length}</span>
+     tracked backers on one cap table. If this group has a single consensus position, that is it.`,
+    `Greater China holds roughly <span class="hot">${cnShare.toFixed(1)}%</span> of tracked value while shipping the
+     overwhelming majority of the world's humanoid robots — and that understates it, because its winners have left.
+     Zhipu, MiniMax, UBTech, Momenta and CXMT all listed in 2025–26, so they are absent from a board of private
+     companies by definition.`,
+    `North America is <span class="hot">${naShare.toFixed(0)}%</span> of ventures but the overwhelming majority of
+     tracked value. Outside it the pattern inverts: Asia-Pacific carries more companies than Europe at a fraction of
+     the price, and Africa and Latin America disclose almost no valuations at all.`,
+    `<span class="hot">${undisc}</span> of ${priv.length} ventures have never published a valuation. That is a fact
+     about small and non-US companies, not a gap in the data — and it is where the emergence signal lives.`
+  ].filter(Boolean);
+
+  $("#brief-findings").innerHTML =
+    `<span class="eyebrow">What the data says that you would not guess</span>` +
+    findings.map((f,i)=>`<div class="finding"><span class="fi">${String(i+1).padStart(2,"0")}</span><p>${f}</p></div>`).join("");
+
+  /* ---- long shots: the earliest end of the board ----
+     Ranked by who is attached rather than by size, because at this stage size
+     tells you nothing. A deep operator role outranks a fund cheque. */
+  const ls=$("#brief-longshots");
+  if(ls){
+    const seedish=VENTURES.filter(v=>!v.listed && (v.m||9)<=2);
+    const scored=seedish.map(v=>{
+      const deep=v.pos.filter(p=>p.def.w>=3);
+      const builders=v.backers.filter(b=>O[b]&&O[b].kind==="builder").length;
+      return {v,deep,builders,score:v.pos.reduce((s,p)=>s+p.w,0)+builders*2+deep.length*4};
+    }).filter(x=>x.v.backers.length).sort((a,b)=>b.score-a.score).slice(0,8);
+    const seedCount=seedish.length;
+    const withOp=seedish.filter(v=>v.backers.some(b=>O[b]&&O[b].kind!=="fund")).length;
+
+    ls.innerHTML=
+      `<h3>The long shots</h3>
+       <p><span class="num">${seedCount}</span> ventures on the board are at pre-seed, seed or Series A —
+       ${Math.round(seedCount/priv.length*100)}% of it. Of those, <span class="num">${withOp}</span> have a named
+       operator or solo investor attached rather than only a fund. Those are the ones below, ranked by depth of
+       involvement rather than by size, because at this stage size tells you nothing.</p>
+       <div class="lsgrid">${scored.map(({v,deep})=>{
+         const t=T[v.theme];
+         const who=deep.length ? `${ROLE_DEF[deep[0].key].short} · ${O[deep[0].op].name}`
+                               : v.backers.slice(0,2).map(b=>O[b]?O[b].name:b).join(", ");
+         return `<button class="lscard" type="button" data-v="${v.id}" style="--hue:${t.hue}">
+             <span class="lst">${t.name}</span>
+             <span class="lsn">${v.name}</span>
+             <span class="lsd">${v.tag}</span>
+             <span class="lsw">${who}</span>
+           </button>`;}).join("")}</div>
+       <p class="lsnote"><b>Coverage here is genuinely poor, and it is worth knowing why.</b> Exactly one venture on
+       this board is labelled pre-seed. Rounds that small are rarely announced, almost never priced publicly, and the
+       ones that do surface reach me through fund portfolio pages — which list companies that already raised visibly
+       and quietly drop the ones that died. This is the part of the dataset most distorted by survivorship, and the
+       part where absence least resembles nonexistence.</p>`;
+    ls.querySelectorAll(".lscard").forEach(b=>b.addEventListener("click",()=>openVenture(b.dataset.v)));
+  }
+
+  /* Sector lens — the board organised by thesis, re-read as industries,
+     plus an explicit account of what is missing and why. */
+  const sec=$("#brief-sectors");
+  if(sec){
+    sec.innerHTML=
+      `<h3>The same board, read as industries</h3>
+       <p>The themes are organised by thesis rather than by sector, which makes conventional industries hard to find.
+       Biotech, for instance, is not a theme here — it is spread across four of them. This is the cross-cutting view.</p>
+       <div class="sgrid">${SECTORS.map(s=>{
+         const cos=VENTURES.filter(v=>s.themes.includes(v.theme));
+         const cap=cos.filter(v=>!v.listed).reduce((a,v)=>a+v.v,0);
+         const em=s.themes.reduce((a,id)=>a+T[id].emergence,0)/s.themes.length;
+         return `<button class="scard" type="button" data-s="${s.id}" style="--sc:${s.hue}">
+           <span class="sn">${s.name}</span>
+           <span class="sm"><b>${cos.length}</b> ventures · <b>${money(cap)}</b> · emergence <b>${Math.round(em)}</b></span>
+           <span class="sd">${s.note}</span>
+           <span class="sth">${s.themes.map(id=>T[id].name).join(" · ")}</span>
+         </button>`;}).join("")}</div>
+       <div class="gaps">
+         <span class="eyebrow">What is missing, and why</span>
+         ${SECTOR_GAPS.map(([n,why])=>`<div class="gap"><b>${n}</b><span>${why}</span></div>`).join("")}
+         <p class="gapnote">These absences are findings in themselves. The board reflects what this particular cohort
+         funds, and that is not the same as what matters. Agriculture, water, care delivery and education are largely
+         missing because venture economics dislike them — not because they are unimportant.</p>
+       </div>`;
+    sec.querySelectorAll(".scard").forEach(b=>b.addEventListener("click",()=>{
+      const s=SECTORS.find(x=>x.id===b.dataset.s);
+      S.themes=new Set(s.themes); renderFilters(); renderAll(); showView("radar");
+    }));
+  }
+
+  const guide=[
+    ["radar","Radar","All ${n} themes ranked by how many operators independently back them"],
+    ["horizon","Horizon","Conviction plotted against maturity — the quadrant that answers 'what next'"],
+    ["conv","Convergence","Operator × theme heatmap. Where independent bets collide"],
+    ["ops","Operators","The people and funds, filterable to founders only"],
+
+    ["expo","Exposure","Every theme mapped to the listed stocks and funds that track it"],
+    ["vent","Ventures","All ${v} companies, searchable"],
+    ["mom","Momentum","Five years of disclosed rounds on one axis"]
+  ];
+  $("#brief-nav").innerHTML = guide.map(([k,t,d])=>
+    `<button class="bnav" type="button" data-go="${k}"><b>${t}</b><span>${
+      d.replace("${n}",THEMES.length).replace("${v}",VENTURES.length)}</span></button>`).join("");
+  $("#brief-nav").querySelectorAll(".bnav").forEach(b=>
+    b.addEventListener("click",()=>showView(b.dataset.go)));
+
+  renderAtlas();   // the map is a section of this page now, not its own view
+}
+
+/* ---------- niches ---------- */
+const PHASE_HUE={Heating:"#e0654f",Contested:"#f0a53c",Crowded:"#b98ae0",Consolidating:"#7aa2f7",Settled:"#7a88ad",Nascent:"#5fd39a"};
+const PHASE_ORDER=["Heating","Contested","Nascent","Crowded","Consolidating","Settled"];
+
+/* Niche bubbles hold fractional coordinates; layout applies the zoom. */
+let nicheNodes=[], nicheZoom=null;
+function layoutNicheMap(){
+  const map=$("#nmap"); if(!map) return;
+  const z=nicheZoom?nicheZoom.z:{k:1,tx:0,ty:0};
+  const W=map.clientWidth, H=map.clientHeight;
+  const shown=[];
+  nicheNodes.forEach(n=>{
+    const x=(n.fx*W)*z.k+z.tx, y=(n.fy*H)*z.k+z.ty;
+    n.el.classList.toggle("flip",x>W*0.62);
+    if(x<-50||x>W+50||y<-40||y>H+40){ n.el.style.display="none"; return; }
+    n.el.style.display="";
+    n.el.style.left=x.toFixed(1)+"px";
+    n.el.style.top=y.toFixed(1)+"px";
+    if(n.w>0) shown.push(n);
+  });
+  deconflict(shown.sort((a,b)=>b.w-a.w).map(n=>({label:n.el.querySelector(".bl"),host:n.el})));
+}
+
+function renderNiches(){
+  const vis = NICHE_LIST.filter(nx=>{
+    if(S.themes.size && !S.themes.has(nx.t)) return false;
+    if(S.nphase && nx.phase!==S.nphase) return false;
+    if(S.nReadable && nx.count<3) return false;
+    if(S.q){
+      const hay=(nx.name+" "+T[nx.t].name+" "+nx.cos.map(c=>c.name).join(" ")).toLowerCase();
+      if(!hay.includes(S.q)) return false;
+    }
+    return nx.cos.some(matches);
+  }).sort((a,b)=> b.emergence-a.emergence || b.count-a.count);
+
+  $("#niche-count").textContent = NICHE_LIST.length;
+  const readable = NICHE_LIST.filter(x=>x.count>=3).length;
+  const cov=$("#niche-coverage");
+  if(cov) cov.innerHTML =
+    `<b>${NICHE_LIST.length}</b> niches across ${VENTURES.length} ventures — but only <b>${readable}</b> currently hold
+     three or more companies, which is the minimum for concentration and acceleration to mean anything. The other
+     ${NICHE_LIST.length-readable} are marked <b>Nascent</b> and should be read as a watchlist, not a trend. Thin
+     coverage here is partly real (these are genuinely small fields) and partly a limit of the data — several of the
+     smaller ventures carry only a one-line description, which is not always enough to place them precisely.`;
+
+  $("#phasekey").innerHTML = [
+    ["Heating","Capital accelerating year on year","the ones to look at"],
+    ["Contested","No winner yet, steady funding","still open"],
+    ["Crowded","Many entrants, capital decelerating","late to enter"],
+    ["Consolidating","A clear leader has emerged","winner taking it"],
+    ["Settled","One company dominates, funding slowing","done"],
+    ["Nascent","Too few companies to read","watch only"]
+  ].map(([p,d,note])=>`<div class="pk" style="--pc:${PHASE_HUE[p]}"><b>${p}</b><span>${d}</span><i>${note}</i></div>`).join("");
+
+  const fh=$("#nfilters");
+  fh.innerHTML=`<span class="glabel">Phase</span>`;
+  PHASE_ORDER.forEach(p=>{
+    const n=NICHE_LIST.filter(x=>x.phase===p).length;
+    const b=el("button","fchip",`<span class="swatch" style="background:${PHASE_HUE[p]}"></span>${p}<b class="cnt">${n}</b>`);
+    b.type="button";
+    b.setAttribute("aria-pressed",S.nphase===p?"true":"false");
+    b.addEventListener("click",()=>{ S.nphase = S.nphase===p?null:p; renderNiches(); });
+    fh.appendChild(b);
+  });
+  /* Half the niches hold fewer than three companies, which makes them
+     unreadable dots. Let them be hidden outright rather than only dimmed. */
+  const tog=el("button","fchip",
+    `<span class="swatch" style="background:${S.nReadable?"var(--signal)":"var(--ink-4)"}"></span>Readable only<b class="cnt">${NICHE_LIST.filter(x=>x.count>=3).length}</b>`);
+  tog.type="button";
+  tog.setAttribute("aria-pressed",S.nReadable?"true":"false");
+  tog.title="Show only niches with three or more companies — the minimum for the lifecycle read to mean anything";
+  tog.addEventListener("click",()=>{ S.nReadable=!S.nReadable; renderNiches(); });
+  fh.appendChild(el("span","glabel","·"));
+  fh.appendChild(tog);
+
+  /* ---- the map: emergence across, capital momentum up ---- */
+  const map=$("#nmap");
+  map.querySelectorAll(".nbub,.nmid,.nlab").forEach(n=>n.remove());
+  const mx = e => 6 + (e/100)*88;              // emergence 0-100 → %
+  const my = m => 92 - ((m+2)/5)*84;           // momentum -2..3 → % (inverted)
+  const maxN = Math.max(...vis.map(n=>n.count), 1);
+
+  const vmid=el("div","nmid v"); vmid.style.left=mx(medEm)+"%"; map.appendChild(vmid);
+  const hmid=el("div","nmid h"); hmid.style.top=my(0)+"%";      map.appendChild(hmid);
+  [["hot","right:12px;top:10px;text-align:right","Early and accelerating","the sweet spot"],
+   ["","left:12px;top:10px","Mature but accelerating","late money piling in"],
+   ["","right:12px;bottom:12px;text-align:right","Early and quiet","too soon, or stalled"],
+   ["","left:12px;bottom:12px","Mature and slowing","done"]
+  ].forEach(([c,css,t,s])=>{ const l=el("div","nlab "+c,`<b>${t}</b>${s}`); l.style.cssText=css; map.appendChild(l); });
+
+  nicheNodes=[];
+  vis.forEach(nx=>{
+    const x=mx(nx.emergence), y=my(nx.momentum);
+    const sz=8+16*Math.sqrt(nx.count/maxN);
+    const thin=nx.count<3;
+    const b=el("button","nbub"+(thin?" dim":"")); b.type="button";
+    b.style.cssText=`--pc:${PHASE_HUE[nx.phase]};--sz:${sz.toFixed(1)}px`;
+    b.innerHTML=`<span class="bd"></span><span class="bl">${nx.name}</span>`;
+    const lead=[...nx.cos].sort((a,c)=>c.v-a.v).slice(0,3).map(c=>c.name).join(" · ");
+    TIP.bind(b,
+      `<b>${nx.name}</b><span class="tsub">${T[nx.t].name} · ${nx.phase}</span>
+       <div class="trow"><span>Emergence</span><b>${Math.round(nx.emergence)}</b></div>
+       <div class="trow"><span>Companies</span><b>${nx.count}</b></div>
+       <div class="trow"><span>Backers</span><b>${nx.ops.length}</b></div>
+       <div class="trow"><span>Tracked value</span><b>${nx.cap>0?money(nx.cap):"undisclosed"}</b></div>
+       ${lead?`<div class="tnote">${lead}</div>`:""}`);
+    b.setAttribute("aria-label",`${nx.name} — ${nx.phase}, ${nx.count} companies, emergence ${Math.round(nx.emergence)}`);
+    b.addEventListener("click",()=>openNiche(nx.id));
+    map.appendChild(b);
+    nicheNodes.push({el:b,fx:x/100,fy:y/100,w:thin?-1:nx.count});
+  });
+
+  if(!nicheZoom){
+    nicheZoom=createZoom(map,()=>layoutNicheMap(),{min:1,max:8});
+    map.appendChild(zoomControls(nicheZoom));
+    map.appendChild(el("span","zoomhint","scroll to zoom · drag to pan · double-click to reset"));
+    map.classList.add("zoomable");
+  }
+  layoutNicheMap();
+
+  const host=$("#ngrid"); host.innerHTML="";
+  vis.forEach(nx=>{
+    const c=el("button","ncard"); c.type="button";
+    c.style.setProperty("--pc",PHASE_HUE[nx.phase]);
+    c.style.setProperty("--th",T[nx.t].hue);
+    const lead=[...nx.cos].sort((a,b)=>b.v-a.v).slice(0,3).map(x=>x.name);
+    const accelTxt = nx.prior>0 ? (nx.accel>=1?"+":"")+Math.round((nx.accel-1)*100)+"%" : (nx.recent>0?"new":"—");
+    c.innerHTML=
+      `<div class="ncard-top">
+         <div style="flex:1;min-width:0">
+           <span class="nparent">${T[nx.t].name}</span>
+           <h4>${nx.name}</h4>
+         </div>
+         <span class="nphase">${nx.phase}</span>
+       </div>
+       <div class="nbar"><i style="width:${nx.emergence.toFixed(0)}%"></i></div>
+       <div class="nmetrics">
+         <div class="nm"><b style="color:${lite(PHASE_HUE[nx.phase])}">${Math.round(nx.emergence)}</b><span>Emergence</span></div>
+         <div class="nm"><b>${nx.count}</b><span>Companies</span></div>
+         <div class="nm"><b>${nx.ops.length}</b><span>Backers</span></div>
+         <div class="nm"><b style="color:${nx.accel>=1.5?"var(--crit)":nx.accel<0.8&&nx.prior>0?"var(--ink-4)":"var(--ink-2)"}">${accelTxt}</b><span>12m capital</span></div>
+       </div>
+       <div class="ncos"><b>${lead.join(" · ")}</b>${nx.count>3?` and ${nx.count-3} more`:""}</div>`;
+    c.addEventListener("click",()=>openNiche(nx.id));
+    host.appendChild(c);
+  });
+  $("#nempty").hidden = vis.length>0;
+}
+
+function openNiche(id){
+  lastFocus=document.activeElement;
+  const nx=NICHE_LIST.find(x=>x.id===id), th=T[nx.t];
+  const accelTxt = nx.prior>0 ? (nx.accel>=1?"+":"")+Math.round((nx.accel-1)*100)+"% year on year" : (nx.recent>0?"first capital in the last year":"no recent rounds");
+  const html=`
+    <div class="panel-hd">
+      <button class="panel-close" type="button" aria-label="Close">✕</button>
+      <div class="panel-id"><canvas id="pn" aria-hidden="true"></canvas>
+        <div><div class="eyebrow" style="color:${lite(th.hue)}">${th.name} · niche</div>
+          <h3 id="panel-title">${nx.name}</h3>
+          <div class="op-role">${nx.phase} — ${nx.phaseNote}</div></div></div>
+    </div>
+    <div class="panel-bd">
+      <div class="facts">
+        <div class="fact"><span>Emergence</span><b style="color:${lite(PHASE_HUE[nx.phase])}">${Math.round(nx.emergence)}</b></div>
+        <div class="fact"><span>Companies</span><b>${nx.count}</b></div>
+        <div class="fact"><span>Backers</span><b>${nx.ops.length}</b></div>
+        <div class="fact"><span>Tracked value</span><b>${nx.cap>0?money(nx.cap):"—"}</b></div>
+      </div>
+      <div class="sect"><div class="eyebrow">Lifecycle read</div>
+        <p><b>${nx.phase}.</b> ${nx.phaseNote}. Capital in the last twelve months is ${accelTxt}.
+        Concentration sits at <b>${nx.hhi.toFixed(2)}</b> on a 0–1 scale, where 1 means a single company accounts for
+        the entire niche's tracked value and low numbers mean it is still genuinely contested.</p>
+      </div>
+      <div class="sect"><div class="eyebrow">Quantitative profile</div>
+        <div class="facts">
+          <div class="fact"><span>Typical round</span><b>${nx.medRnd?money(nx.medRnd/1000):"—"}</b></div>
+          <div class="fact"><span>Capital per company</span><b>${nx.capPer?money(nx.capPer):"—"}</b></div>
+          <div class="fact"><span>Round velocity</span><b>${nx.velo?nx.velo.toFixed(1)+"/yr":"—"}</b></div>
+          <div class="fact"><span>Age of niche</span><b>${nx.ageY?nx.ageY.toFixed(1)+"y":"—"}</b></div>
+          <div class="fact"><span>Capital concentration</span><b>${nx.hhi.toFixed(2)}</b></div>
+          <div class="fact"><span>Backer concentration</span><b>${nx.backerHHI.toFixed(2)}</b></div>
+        </div>
+        <p class="otherb"><b>Typical round</b> is the median disclosed cheque — how much it costs to play here.
+        <b>Age</b> counts from the first tracked round, so a low number with high capital means this appeared fast.
+        <b>Backer concentration</b> near 1 means a single investor is carrying the niche rather than many independent ones.</p>
+      </div>
+      <div class="sect"><div class="eyebrow">Companies</div>
+        <div class="plist">${[...nx.cos].sort((a,b)=>b.v-a.v).map(v=>
+          `<button class="pitem" type="button" data-v="${v.id}" style="--hue2:${th.hue}">
+             <span class="sw"></span>
+             <span><span class="pn">${v.name}</span><br><span class="pt">${v.tag}</span></span>
+             <span class="pv">${v.listed?"Listed":v.v>0?money(v.v):"—"}</span></button>`).join("")}</div>
+      </div>
+      ${(()=>{
+        const own=NICHE_EXPOSURE[nx.id], inh=EXPOSURE[nx.t];
+        const e=own||inh; if(!e) return "";
+        const ticks=arr=>arr&&arr.length
+          ? arr.map(([s,n,d])=>`<div class="tick"><span class="sym" style="color:${lite(th.hue)}">${s}</span><span class="nm">${n}${d?`<span class="ds">${d}</span>`:""}</span></div>`).join("")
+          : `<div class="ecol none">None.</div>`;
+        return `<div class="sect">
+          <div class="eyebrow">How to buy this — ${own?"niche-specific":"inherited from "+th.name}</div>
+          <div class="qmeter" style="margin:0 0 9px">
+            <span>Proxy quality</span>
+            <span class="pips">${Array.from({length:5},(_,i)=>`<i class="${i<e.q?"on":""}" style="${i<e.q?`background:${th.hue}`:""}"></i>`).join("")}</span>
+            <span style="color:${lite(th.hue)}">${e.q}/5</span>
+          </div>
+          <p class="otherb" style="margin-top:0">${e.note}</p>
+          ${!own?`<p class="otherb"><b>Note:</b> these tickers cover the whole ${th.name} theme, not this niche specifically — treat them as approximate.</p>`:""}
+          <div class="ebody" style="margin-top:11px">
+            <div class="ecol"><div class="eyebrow">Pure-plays</div>${ticks(e.pure)}</div>
+            <div class="ecol"><div class="eyebrow">Proxies</div>${ticks(e.proxy)}</div>
+            <div class="ecol"><div class="eyebrow">Funds</div>${ticks(e.etf)}</div>
+          </div>
+          <p class="otherb" style="color:var(--crit)"><b>Not investment advice.</b> A factual map of where this niche touches public markets, nothing more.</p>
+        </div>`;})()}
+      ${nx.ops.length?`<div class="sect"><div class="eyebrow">Who is backing this niche</div>
+        <div class="backers">${nx.ops.map(b=>
+          `<button class="backer" type="button" data-op="${b}">
+             <canvas data-nm="${O[b].name}" aria-hidden="true"></canvas>
+             <span><span class="bn">${O[b].name}</span><br><span class="br">${O[b].vehicle}</span></span>
+           </button>`).join("")}</div></div>`:""}
+    </div>`;
+  showPanel(html,PHASE_HUE[nx.phase]);
+  sigil($("#pn"),nx.name,th.hue,60);
+  $("#panel").querySelectorAll(".pitem").forEach(b=>b.addEventListener("click",()=>openVenture(b.dataset.v)));
+  $("#panel").querySelectorAll(".backer").forEach(btn=>{
+    portrait(btn.querySelector("canvas"),btn.querySelector("canvas").dataset.nm,26);
+    btn.addEventListener("click",()=>openOperator(btn.dataset.op));
+  });
+}
+
+/* ---------- exposure ---------- */
+function renderExposure(){
+  const rows=[...THEMES].filter(t=>EXPOSURE[t.id]).sort((a,b)=>EXPOSURE[a.id].q-EXPOSURE[b.id].q||b.emergence-a.emergence);
+
+  /* buyability vs emergence — the inverse relationship, stated plainly */
+  const bh=$("#buyability");
+  const qs=rows.map(t=>EXPOSURE[t.id].q), es=rows.map(t=>t.emergence);
+  const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+  const mq=mean(qs), me=mean(es);
+  const cov=qs.reduce((s,q,i)=>s+(q-mq)*(es[i]-me),0);
+  const sd=Math.sqrt(qs.reduce((s,q)=>s+(q-mq)**2,0))*Math.sqrt(es.reduce((s,e)=>s+(e-me)**2,0));
+  const r=sd?cov/sd:0;
+  bh.innerHTML=
+    `<span class="eyebrow">The core finding on this page</span>
+     <p class="bexplain">Each row is one theme. The <b>five squares</b> on the left count how well you could buy into it
+     today — five filled means listed pure-plays exist and you can own the thesis directly; zero filled means there is
+     no public company anywhere that represents it. The <b>amber bar</b> on the right is that theme's emergence score,
+     the measure of how early it still is.</p>
+     <p class="bexplain">Read down the list and the two move in opposite directions. Themes at the top have almost no
+     squares and long bars — early, and unbuyable. Themes at the bottom have full squares and short bars — buyable, and
+     already mature. <b>The relationship is not a coincidence.</b> A listed pure-play appearing is what it looks like
+     when a theme stops being early: the companies got big enough to go public, which means the repricing already
+     happened. By the time you can easily buy something here, you are late to it.</p>
+     <div class="bhead"><span>Theme</span><span>How buyable</span><span>How early →</span><span></span></div>`+
+    rows.map(t=>{
+      const q=EXPOSURE[t.id].q;
+      return `<div class="brow" style="--hue:${t.hue}">
+        <span class="bn">${t.name}</span>
+        <span class="pips" title="Proxy quality ${q} of 5">${Array.from({length:5},(_,i)=>`<i class="${i<q?"on":""}"></i>`).join("")}</span>
+        <div class="btrack" title="Emergence ${Math.round(t.emergence)} of 100"><i style="width:${t.emergence.toFixed(0)}%"></i></div>
+        <span class="bnote">${q===0?"unbuyable":q+"/5 buyable"} · ${Math.round(t.emergence)} early</span></div>`;
+    }).join("")+
+    `<div class="blegend">
+       <span style="color:${r<-0.3?"var(--up)":"var(--ink-4)"}">Correlation r = ${r.toFixed(2)}${r<-0.3?" — strongly inverse: the more buyable a theme is, the less early it is":" — weak relationship"}</span>
+     </div>`;
+
+  const host=$("#expo"); host.innerHTML="";
+  rows.forEach(t=>{
+    const e=EXPOSURE[t.id];
+    const card=el("div","ecard"); card.style.setProperty("--hue",t.hue);
+    const ticks=arr=>arr.length
+      ? arr.map(([s,n,d])=>`<div class="tick"><span class="sym">${s}</span><span class="nm">${n}${d?`<span class="ds">${d}</span>`:""}</span></div>`).join("")
+      : `<div class="ecol none">None exists.</div>`;
+    card.innerHTML=
+      `<div class="ecard-hd">
+         <h3>${t.name}</h3>
+         <span class="emtag ${t.grade}">${t.grade==="early"?"Emergent":t.grade==="mid"?"Building":"Mature"} · ${Math.round(t.emergence)}</span>
+         <div class="qmeter"><span>Proxy quality</span>
+           <span class="pips">${Array.from({length:5},(_,i)=>`<i class="${i<e.q?"on":""}"></i>`).join("")}</span>
+           <span style="color:${lite(t.hue)}">${e.q}/5</span></div>
+       </div>
+       <p class="ecard-note">${e.note}</p>
+       <div class="ebody">
+         <div class="ecol"><div class="eyebrow">Listed pure-plays</div>${ticks(e.pure)}</div>
+         <div class="ecol"><div class="eyebrow">Diluted proxies</div>${ticks(e.proxy)}</div>
+         <div class="ecol"><div class="eyebrow">Funds</div>${ticks(e.etf)}</div>
+       </div>`;
+    host.appendChild(card);
+  });
+}
+
+/* ---------- convergence ---------- */
+function renderHeat(){
+  const rowsOps=[...OPERATORS].sort((a,b)=>b.book.length-a.book.length);
+  const maxCell=Math.max(1,...OPERATORS.flatMap(o=>THEMES.map(t=>o.book.filter(v=>v.theme===t.id).length)));
+  $("#heat").innerHTML =
+    "<thead><tr><th>Operator</th>"+ranked.map(t=>`<th><span>${t.name}</span></th>`).join("")+"</tr></thead><tbody>"+
+    rowsOps.map(o=>"<tr><th>"+o.name+"</th>"+ranked.map(t=>{
+      const n=o.book.filter(v=>v.theme===t.id).length;
+      if(!n) return `<td><div class="cell z">0</div></td>`;
+      const a=0.30+0.70*(n/maxCell);
+      return `<td><div class="cell" style="background:rgba(240,165,60,${a.toFixed(2)})" title="${o.name} — ${t.name}: ${n}">${n}</div></td>`;
+    }).join("")+"</tr>").join("")+"</tbody>";
+  $("#ramp").innerHTML=[0.30,0.47,0.65,0.82,1].map(a=>`<i style="background:rgba(240,165,60,${a})"></i>`).join("");
+  $("#rampmax").textContent="1 → "+maxCell;
+
+  const byCap=[...THEMES].sort((a,b)=>b.cap-a.cap).map(t=>t.id);
+  const dv=ranked.map(t=>({t,convRank:ranked.indexOf(t)+1,capRank:byCap.indexOf(t.id)+1,gap:byCap.indexOf(t.id)-ranked.indexOf(t)}))
+                 .sort((a,b)=>b.gap-a.gap);
+  const dh=$("#diverge"); dh.innerHTML="";
+  [...dv.slice(0,3),...dv.slice(-2)].forEach(d=>{
+    const c=el("div","dv"); c.style.setProperty("--hue",d.t.hue);
+    c.innerHTML=
+      `<h5>${d.t.name}</h5>
+       <div class="dv-gap"><b class="${d.gap>0?"pos":"neg"}">${d.gap>0?"+":""}${d.gap}</b>
+         <span>${d.gap>0?"ranks underpriced":d.gap<0?"ranks ahead of belief":"in line"}</span></div>
+       <div class="dv-rows">
+         <div class="dv-row"><span>Conviction rank</span><b>#${d.convRank}</b></div>
+         <div class="dv-row"><span>Capital rank</span><b>#${d.capRank}</b></div>
+         <div class="dv-row"><span>Operators</span><b>${d.t.conviction}</b></div>
+         <div class="dv-row"><span>Tracked value</span><b>${money(d.t.cap)}</b></div>
+       </div>`;
+    dh.appendChild(c);
+  });
+
+  const rk=$("#rank"); rk.innerHTML="";
+  ranked.forEach((t,i)=>{
+    const r=el("div","rankrow"); r.style.setProperty("--hue",t.hue);
+    r.innerHTML=`<span class="pos">${String(i+1).padStart(2,"0")}</span>
+      <span class="nm">${t.name}</span>
+      <div class="bar"><i style="width:${(t.conviction/maxConv*100).toFixed(1)}%"></i></div>
+      <span class="sc">${t.conviction} ops · ${money(t.cap)}</span>`;
+    rk.appendChild(r);
+  });
+}
+
+/* ---------- operators ---------- */
+function renderOps(){
+  const host=$("#ops"); host.innerHTML="";
+  const list=[...OPERATORS].filter(o=>{
+    if(S.kinds.size && !S.kinds.has(o.kind)) return false;
+    if(S.regions.size && !S.regions.has(o.region)) return false;
+    if(S.q){
+      const hay=(o.name+" "+o.role+" "+o.vehicle+" "+o.thesis+" "+o.book.map(v=>v.name).join(" ")).toLowerCase();
+      if(!hay.includes(S.q)) return false;
+    }
+    return true;
+  }).sort((a,b)=>b.book.length-a.book.length);
+  if(!list.length){ host.appendChild(el("div","empty","No operators match those filters.")); return; }
+  list.forEach(o=>{
+    const b=el("button","op"); b.type="button";
+    b.setAttribute("aria-pressed",S.op===o.id?"true":"false");
+    const top=el("div","op-top");
+    const cv=el("canvas"); cv.setAttribute("aria-hidden","true"); top.appendChild(cv);
+    top.appendChild(el("div",null,`<h4>${o.name}</h4><span class="op-role">${o.role}</span>`));
+    const kc=el("span","regchip",KIND_LBL[o.kind]);
+    kc.style.setProperty("--rc",KIND_HUE[o.kind]); kc.style.marginLeft="auto"; top.appendChild(kc);
+    const rc=el("span","regchip",REGIONS[o.region].n.replace("Greater ",""));
+    rc.style.setProperty("--rc",REGIONS[o.region].hue); rc.style.marginLeft="4px"; top.appendChild(rc);
+    b.appendChild(top);
+    b.appendChild(el("p","op-thesis",o.thesis));
+    const th=el("div","op-themes");
+    o.themes.map(id=>T[id]).sort((a,c)=>a.name.localeCompare(c.name)).forEach(t=>{
+      const c=el("span","tchip",t.name.split(" ")[0].replace("&","")); c.style.setProperty("--c",t.hue); th.appendChild(c);
+    });
+    if(!o.themes.length) th.appendChild(el("span","tchip","Protocol / non-equity"));
+    b.appendChild(th);
+    b.appendChild(el("div","op-foot",
+      `<span>${o.book.length} position${o.book.length===1?"":"s"}${o.deepRoles.length?` · <span style="color:var(--up)">${o.deepRoles.length} deep</span>`:""}</span><b>${money(o.exposure)}</b>`));
+    b.addEventListener("click",()=>openOperator(o.id));
+    host.appendChild(b); portrait(cv,o.name,42);
+  });
+}
+
+/* ---------- atlas ---------- */
+const LAT_N=84, LAT_S=-60;
+const proj=(lon,lat,W,H)=>[ (lon+180)/360*W, (LAT_N-lat)/(LAT_N-LAT_S)*H ];
+
+/* ============================================================
+   GLOBE — orthographic projection, drawn on canvas each frame.
+   Drag to spin, wheel to zoom, auto-rotates when left alone.
+   Markers are DOM so clicks, tooltips and keyboard focus still work;
+   they are moved with transform only, which the compositor handles cheaply.
+   ============================================================ */
+const GLOBE={lam:-30,phi:18,scale:1,spin:true,drag:null,vel:0.055,settleAt:0};
+const D2R=Math.PI/180;
+
+/* Returns [x,y,visible,depth] in globe-local pixels. Points on the far side
+   are projected onto the limb so polygons stay closed instead of tearing. */
+function orth(lon,lat,R,lam,phi){
+  const dl=(lon-lam)*D2R, la=lat*D2R, p=phi*D2R;
+  const cosc=Math.sin(p)*Math.sin(la)+Math.cos(p)*Math.cos(la)*Math.cos(dl);
+  let x=R*Math.cos(la)*Math.sin(dl);
+  let y=-R*(Math.cos(p)*Math.sin(la)-Math.sin(p)*Math.cos(la)*Math.cos(dl));
+  if(cosc<0){                        // clamp to the horizon circle
+    const d=Math.hypot(x,y)||1;
+    x=x/d*R; y=y/d*R;
+  }
+  return [x,y,cosc>=0,cosc];
+}
+
+function drawGlobe(){
+  const stage=$("#mapstage"), cv=$("#worldmap");
+  if(!cv) return null;
+  const W=stage.clientWidth||820, H=Math.round(Math.min(W*0.62,560));
+  const dpr=Math.min(devicePixelRatio||1,2);
+  if(cv.width!==W*dpr||cv.height!==H*dpr){ cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+"px"; }
+  const g=cv.getContext("2d");
+  g.setTransform(dpr,0,0,dpr,0,0);
+  g.clearRect(0,0,W,H);
+
+  const cx=W/2, cy=H/2;
+  const R=Math.min(W,H)*0.42*GLOBE.scale;
+  const {lam,phi}=GLOBE;
+
+  // atmosphere
+  const halo=g.createRadialGradient(cx,cy,R*0.94,cx,cy,R*1.16);
+  halo.addColorStop(0,"rgba(122,162,247,.20)");
+  halo.addColorStop(1,"rgba(122,162,247,0)");
+  g.fillStyle=halo; g.beginPath(); g.arc(cx,cy,R*1.16,0,Math.PI*2); g.fill();
+
+  // ocean, lit from upper left
+  const oc=g.createRadialGradient(cx-R*0.34,cy-R*0.38,R*0.06,cx,cy,R);
+  oc.addColorStop(0,"#16203a");
+  oc.addColorStop(0.62,"#0e1526");
+  oc.addColorStop(1,"#080c16");
+  g.fillStyle=oc; g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.fill();
+
+  g.save();
+  g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.clip();
+
+  // graticule
+  g.strokeStyle="rgba(120,150,220,.13)"; g.lineWidth=1;
+  for(let lon=-180;lon<180;lon+=30){
+    g.beginPath(); let started=false;
+    for(let lat=-85;lat<=85;lat+=3){
+      const [x,y,vis]=orth(lon,lat,R,lam,phi);
+      if(!vis){ started=false; continue; }
+      started?g.lineTo(cx+x,cy+y):(g.moveTo(cx+x,cy+y),started=true);
+    }
+    g.stroke();
+  }
+  for(let lat=-60;lat<=60;lat+=30){
+    g.beginPath(); let started=false;
+    for(let lon=-180;lon<=180;lon+=3){
+      const [x,y,vis]=orth(lon,lat,R,lam,phi);
+      if(!vis){ started=false; continue; }
+      started?g.lineTo(cx+x,cy+y):(g.moveTo(cx+x,cy+y),started=true);
+    }
+    g.stroke();
+  }
+  // equator picked out
+  g.strokeStyle="rgba(240,165,60,.24)"; g.lineWidth=1; g.setLineDash([4,6]);
+  g.beginPath(); { let started=false;
+    for(let lon=-180;lon<=180;lon+=3){
+      const [x,y,vis]=orth(lon,0,R,lam,phi);
+      if(!vis){ started=false; continue; }
+      started?g.lineTo(cx+x,cy+y):(g.moveTo(cx+x,cy+y),started=true);
+    } }
+  g.stroke(); g.setLineDash([]);
+
+  // land
+  LAND.forEach(poly=>{
+    let anyVisible=false;
+    g.beginPath();
+    poly.forEach(([lon,lat],i)=>{
+      const [x,y,vis]=orth(lon,lat,R,lam,phi);
+      if(vis) anyVisible=true;
+      i?g.lineTo(cx+x,cy+y):g.moveTo(cx+x,cy+y);
+    });
+    if(!anyVisible) return;
+    g.closePath();
+    g.fillStyle="rgba(126,146,190,.20)"; g.fill();
+    g.strokeStyle="rgba(146,168,214,.46)"; g.lineWidth=1; g.stroke();
+  });
+  g.restore();
+
+  // terminator rim
+  g.strokeStyle="rgba(150,180,240,.30)"; g.lineWidth=1;
+  g.beginPath(); g.arc(cx,cy,R,0,Math.PI*2); g.stroke();
+
+  return {W,H,cx,cy,R,lam,phi};
+}
+
+/* Atlas nodes hold lon/lat; each frame they are projected onto the globe and
+   moved by transform. Markers on the far side are hidden entirely. */
+let atlasNodes=[], globeRAF=null;
+
+function layoutGlobe(){
+  const geo=drawGlobe();
+  if(!geo) return;
+  const {cx,cy,R,lam,phi}=geo;
+  atlasNodes.forEach(n=>{
+    const [x,y,vis,depth]=orth(n.lon,n.lat,R,lam,phi);
+    if(!vis){ n.el.style.display="none"; n.visible=false; return; }
+    n.el.style.display="";
+    n.visible=true;
+    // fade and shrink toward the limb so the sphere reads as a sphere
+    const d=Math.max(0,Math.min(1,depth));
+    n.el.style.transform=`translate(${(cx+x).toFixed(1)}px,${(cy+y).toFixed(1)}px) translate(-50%,-50%) scale(${(0.72+0.28*d).toFixed(3)})`;
+    n.el.style.opacity=(0.45+0.55*d).toFixed(2);
+    n.el.classList.toggle("flip", x>0);
+  });
+}
+
+/* Labels are expensive to deconflict, so they are hidden while the globe is
+   moving and resolved once it settles. */
+function settleGlobeLabels(){
+  const shown=atlasNodes.filter(n=>n.visible).sort((a,b)=>b.w-a.w);
+  atlasNodes.filter(n=>!n.visible).forEach(n=>{
+    const l=n.el.querySelector(".hlbl"); if(l) l.style.visibility="hidden";
+  });
+  deconflict(shown.map(n=>({label:n.el.querySelector(".hlbl"),host:n.el})),2);
+}
+
+function globeTick(ts){
+  const moving = GLOBE.drag || GLOBE.spin;
+  if(GLOBE.spin && !GLOBE.drag){ GLOBE.lam=(GLOBE.lam+GLOBE.vel+180)%360-180; }
+  if(moving){
+    layoutGlobe();
+    // Rotation is slow, so labels can stay up while it turns — just re-resolve
+    // them a few times a second instead of every frame. Hiding them entirely
+    // while spinning meant they were never visible at all.
+    if(ts-(GLOBE.lastLabel||0) > 320){ GLOBE.lastLabel=ts; settleGlobeLabels(); }
+    GLOBE.settleAt=ts+220;
+  } else if(GLOBE.settleAt && ts>GLOBE.settleAt){
+    GLOBE.settleAt=0;
+    layoutGlobe(); settleGlobeLabels();
+  }
+  globeRAF=requestAnimationFrame(globeTick);
+}
+
+function startGlobe(){
+  const stage=$("#mapstage");
+  if(stage.dataset.globeWired) return;
+  stage.dataset.globeWired="1";
+  stage.classList.add("globe");
+
+  stage.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".hub")||e.target.closest(".zoomctl")) return;
+    GLOBE.drag={x:e.clientX,y:e.clientY,lam:GLOBE.lam,phi:GLOBE.phi};
+    stage.setPointerCapture(e.pointerId); stage.classList.add("grabbing");
+  });
+  stage.addEventListener("pointermove",e=>{
+    if(!GLOBE.drag) return;
+    const k=0.32/GLOBE.scale;
+    GLOBE.lam=GLOBE.drag.lam-(e.clientX-GLOBE.drag.x)*k*-1;
+    GLOBE.phi=Math.max(-82,Math.min(82,GLOBE.drag.phi+(e.clientY-GLOBE.drag.y)*k));
+  });
+  const stop=e=>{
+    if(!GLOBE.drag) return;
+    GLOBE.drag=null; stage.classList.remove("grabbing");
+    try{ stage.releasePointerCapture(e.pointerId); }catch{}
+  };
+  stage.addEventListener("pointerup",stop);
+  stage.addEventListener("pointercancel",stop);
+  stage.addEventListener("wheel",e=>{
+    e.preventDefault();
+    GLOBE.scale=Math.max(0.75,Math.min(4,GLOBE.scale*(e.deltaY<0?1.12:1/1.12)));
+    layoutGlobe();
+  },{passive:false});
+
+  if(!globeRAF) globeRAF=requestAnimationFrame(globeTick);
+}
+
+function renderAtlas(){
+  const stage=$("#mapstage");
+  stage.querySelectorAll(".hub").forEach(n=>n.remove());
+  const W=stage.clientWidth||820, H=Math.round(W*0.50);
+
+  const vis=VENTURES.filter(matches);
+  const agg={};
+  vis.filter(v=>v.hub).forEach(v=>{ (agg[v.hub] ||= {cap:0,n:0,themes:{}}); agg[v.hub].cap+=v.v; agg[v.hub].n++;
+                   agg[v.hub].themes[v.theme]=(agg[v.hub].themes[v.theme]||0)+1; });
+  const maxCap=Math.max(1,...Object.values(agg).map(a=>a.cap));
+
+  atlasNodes=[];
+  Object.entries(agg).sort((a,b)=>a[1].cap-b[1].cap).forEach(([id,a])=>{
+    const hub=HUBS[id];
+    // capital is undisclosed across whole regions, so size on ventures too
+    const sz=8+16*Math.sqrt(a.cap/maxCap)+3*Math.sqrt(a.n);
+    const b=el("button","hub"); b.type="button";
+    b.style.cssText=`--rc:${REGIONS[hub.r].hue};--sz:${sz.toFixed(1)}px;--off:${(sz/2+6).toFixed(0)}px`;
+    b.innerHTML=`<span class="ring"></span><span class="hlbl">${hub.n}</span>`;
+    const top=Object.entries(a.themes).sort((x2,y2)=>y2[1]-x2[1]).slice(0,2).map(t=>T[t[0]].name).join(" · ");
+    TIP.bind(b,
+      `<b>${hub.n}</b><span class="tsub">${REGIONS[hub.r].n}</span>
+       <div class="trow"><span>Ventures</span><b>${a.n}</b></div>
+       <div class="trow"><span>Tracked value</span><b>${a.cap>0?money(a.cap):"undisclosed"}</b></div>
+       ${top?`<div class="tnote">${top}</div>`:""}`);
+    b.setAttribute("aria-label",`${hub.n} — ${a.n} ventures`);
+    b.addEventListener("click",()=>openHub(id));
+    stage.appendChild(b);
+    atlasNodes.push({el:b,lon:hub.c[0],lat:hub.c[1],w:a.cap*1000+a.n,visible:true});
+  });
+
+  if(!stage.querySelector(".globectl")){
+    const box=el("div","zoomctl globectl");
+    const mk=(t,label,fn)=>{
+      const btn=el("button",null,t); btn.type="button"; btn.title=label;
+      btn.setAttribute("aria-label",label);
+      btn.addEventListener("click",e=>{e.stopPropagation();fn(btn);});
+      box.appendChild(btn); return btn;
+    };
+    mk("+","Zoom in",()=>{GLOBE.scale=Math.min(4,GLOBE.scale*1.25);layoutGlobe();});
+    mk("−","Zoom out",()=>{GLOBE.scale=Math.max(0.75,GLOBE.scale/1.25);layoutGlobe();});
+    const spinBtn=mk("❚❚","Pause rotation",b2=>{
+      GLOBE.spin=!GLOBE.spin;
+      b2.textContent=GLOBE.spin?"❚❚":"▶";
+      b2.title=GLOBE.spin?"Pause rotation":"Resume rotation";
+      if(!GLOBE.spin){ layoutGlobe(); settleGlobeLabels(); }
+    });
+    spinBtn.textContent=GLOBE.spin?"❚❚":"▶";
+    mk("⟲","Reset view",()=>{GLOBE.lam=-30;GLOBE.phi=18;GLOBE.scale=1;layoutGlobe();settleGlobeLabels();});
+    stage.appendChild(box);
+    stage.appendChild(el("span","zoomhint","drag to spin · scroll to zoom"));
+  }
+  startGlobe();
+  layoutGlobe();
+  settleGlobeLabels();
+
+  // region summary
+  const rg={}; Object.keys(REGIONS).forEach(k=>rg[k]={cap:0,n:0,ops:0,em:[]});
+  vis.filter(v=>v.hub).forEach(v=>{ const r=HUBS[v.hub].r; rg[r].cap+=v.v; rg[r].n++; rg[r].em.push(T[v.theme].emergence); });
+  OPERATORS.forEach(o=>{ if(rg[o.region]) rg[o.region].ops++; });
+  const rb=$("#regbars"); rb.innerHTML="";
+  Object.entries(rg).sort((a,b)=>b[1].cap-a[1].cap).forEach(([k,a])=>{
+    const row=el("div","regrow"); row.style.setProperty("--rc",REGIONS[k].hue);
+    const avgEm=a.em.length?Math.round(a.em.reduce((s,x)=>s+x,0)/a.em.length):0;
+    row.innerHTML=`<h5>${REGIONS[k].n}</h5>
+      <div class="regstat"><span>Ventures</span><b>${a.n}</b></div>
+      <div class="regstat"><span>Tracked value</span><b>${money(a.cap)}</b></div>
+      <div class="regstat"><span>Operators</span><b>${a.ops}</b></div>
+      <div class="regstat"><span>Mean emergence</span><b>${avgEm}</b></div>`;
+    rb.appendChild(row);
+  });
+
+  const hl=$("#hublist"); hl.innerHTML="";
+  Object.entries(agg).sort((a,b)=>b[1].cap-a[1].cap).slice(0,8).forEach(([id,a])=>{
+    const hub=HUBS[id];
+    const top=Object.entries(a.themes).sort((x,y)=>y[1]-x[1])[0];
+    const r=el("button","hubrow"); r.type="button"; r.style.setProperty("--rc",REGIONS[hub.r].hue);
+    r.innerHTML=`<span class="sw"></span>
+      <span><span class="hn">${hub.n}</span><br><span class="hs">${a.n} ventures · ${T[top[0]].name}</span></span>
+      <span class="hv">${money(a.cap)}</span>`;
+    r.addEventListener("click",()=>openHub(id));
+    hl.appendChild(r);
+  });
+}
+
+function renderVentures(){
+  const host=$("#vgrid"); host.innerHTML="";
+  const list=VENTURES.filter(matches).sort((a,b)=>b.v-a.v);
+  list.forEach(v=>host.appendChild(vcard(v)));
+  $("#vempty").hidden=list.length>0;
+}
+
+const T0=2021.5, T1=2026.75;
+function renderMomentum(){
+  const host=$("#lanes"); host.innerHTML="";
+
+  /* Per-theme totals, then sort by trailing-12m capital — the lanes that are
+     hot right now sit at the top rather than the ones with the most backers. */
+  const lanes = ranked.map(t=>{
+    const rs=t.cos.filter(matches).flatMap(v=>(v.rounds||[]).filter(r=>r[1]>0).map(r=>({v,at:r[0],amt:r[1]})));
+    const tot=rs.reduce((s,r)=>s+r.amt,0);
+    const rec=rs.filter(r=>r.at>=NOW-1).reduce((s,r)=>s+r.amt,0);
+    const prv=rs.filter(r=>r.at>=NOW-2&&r.at<NOW-1).reduce((s,r)=>s+r.amt,0);
+    return {t,rs,tot,rec,prv,delta: prv>0 ? rec/prv-1 : (rec>0?null:0)};
+  }).filter(l=>l.rs.length).sort((a,b)=>b.rec-a.rec||b.tot-a.tot);
+
+  const grand = lanes.reduce((s,l)=>s+l.tot,0);
+  const gRec  = lanes.reduce((s,l)=>s+l.rec,0);
+  const gPrv  = lanes.reduce((s,l)=>s+l.prv,0);
+
+  /* year-by-year totals across every visible lane */
+  const years=[2022,2023,2024,2025,2026];
+  const yTot=years.map(y=>lanes.reduce((s,l)=>s+l.rs.filter(r=>Math.floor(r.at)===y).reduce((a,r)=>a+r.amt,0),0));
+  const yMax=Math.max(1,...yTot);
+  const sum=$("#mo-summary");
+  if(sum) sum.innerHTML=
+    `<div class="mo-tot">
+       <div class="mo-tk"><b>${money(grand/1000)}</b><span>Disclosed since 2021</span></div>
+       <div class="mo-tk"><b>${money(gRec/1000)}</b><span>Last 12 months</span></div>
+       <div class="mo-tk"><b style="color:${gPrv&&gRec/gPrv>=1?"var(--crit)":"var(--ink-2)"}">${
+          gPrv? (gRec/gPrv>=1?"+":"")+Math.round((gRec/gPrv-1)*100)+"%" : "—"}</b><span>Versus prior 12m</span></div>
+       <div class="mo-tk"><b>${lanes.reduce((s,l)=>s+l.rs.length,0)}</b><span>Disclosed rounds</span></div>
+     </div>
+     <div class="mo-years">${years.map((y,i)=>
+       `<div class="mo-yr"><div class="mo-ybar"><i style="height:${(yTot[i]/yMax*100).toFixed(0)}%"></i></div>
+        <b>${money(yTot[i]/1000)}</b><span>${y}${y===2026?" YTD":""}</span></div>`).join("")}</div>`;
+
+  lanes.forEach(({t,rs,tot,rec,delta})=>{
+    const lane=el("div","mo-lane"); lane.style.setProperty("--hue",t.hue);
+    const dTxt = delta===null ? "new" : (delta>=0?"+":"")+Math.round(delta*100)+"%";
+    const dCol = delta===null ? "var(--up)" : delta>=0.5 ? "var(--crit)" : delta<-0.3 ? "var(--ink-4)" : "var(--ink-3)";
+    lane.appendChild(el("div","mo-name",
+      `<span class="mo-ln">${t.name}</span>
+       <span class="mo-lv">${money(tot/1000)}<em>${rs.length} rounds</em></span>
+       <span class="mo-ld" style="color:${dCol}" title="Trailing 12 months against the 12 months before">${dTxt}</span>`));
+    const track=el("div","mo-track");
+    rs.forEach(r=>{
+      const d=el("button","dot"); d.type="button";
+      const sz=Math.max(6,Math.min(30,5.5*Math.sqrt(r.amt/60)));
+      d.style.cssText=`left:${(((r.at-T0)/(T1-T0))*100).toFixed(2)}%;width:${sz}px;height:${sz}px;opacity:${(0.5+0.5*Math.min(1,r.amt/2000)).toFixed(2)}`;
+      const yr=Math.floor(r.at), mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][Math.min(11,Math.floor((r.at-yr)*12))];
+      d.title=`${r.v.name} — $${r.amt>=1000?(r.amt/1000).toFixed(1)+"B":r.amt+"M"} · ${mo} ${yr}`;
+      d.setAttribute("aria-label",d.title);
+      d.addEventListener("click",()=>openVenture(r.v.id));
+      track.appendChild(d);
+    });
+    lane.appendChild(track); host.appendChild(lane);
+  });
+  const tk=$("#ticks"); tk.innerHTML="";
+  for(let y=2022;y<=2026;y++){ const s=el("span",null,y); s.style.left=(((y-T0)/(T1-T0))*100).toFixed(2)+"%"; tk.appendChild(s); }
+}
+
+/* ============================================================
+   PANEL
+   ============================================================ */
+let lastFocus=null;
+function showPanel(html,hue){
+  const p=$("#panel"); p.style.setProperty("--hue",hue); p.innerHTML=html;
+  p.querySelector(".panel-close").addEventListener("click",closePanel);
+  $("#scrim").classList.add("on"); p.classList.add("on"); p.scrollTop=0; p.focus();
+}
+function closePanel(){
+  $("#scrim").classList.remove("on"); $("#panel").classList.remove("on");
+  if(lastFocus && lastFocus.isConnected) lastFocus.focus();
+}
+
+function openVenture(id){
+  lastFocus=document.activeElement;
+  const v=V[id], t=T[v.theme], hub=v.hub?HUBS[v.hub]:null;
+  const html=`
+    <div class="panel-hd">
+      <button class="panel-close" type="button" aria-label="Close">✕</button>
+      <div class="panel-id"><canvas id="pv" aria-hidden="true"></canvas>
+        <div><div class="eyebrow" style="color:${lite(t.hue)}">${t.name}</div>
+          <h3 id="panel-title">${v.name}</h3><div class="op-role">${v.tag}</div></div></div>
+    </div>
+    <div class="panel-bd">
+      <div class="facts">
+        <div class="fact"><span>${v.listed?"Market":"Valuation"}</span><b style="font-size:${v.listed?"12.5px":"14.5px"}">${v.listed?"Publicly listed":v.v>0?money(v.v):v.undisclosed?"Undisclosed":"Non-profit"}</b></div>
+        <div class="fact"><span>Status</span><b style="font-size:12.5px">${v.listed?v.stage:v.rep?"Reported":v.stage}</b></div>
+        <div class="fact"><span>Based</span><b style="font-size:12.5px">${hub?hub.n:"Not disclosed"}</b></div>
+        <div class="fact"><span>Theme emergence</span><b style="color:${lite(t.hue)}">${Math.round(t.emergence)}</b></div>
+      </div>
+      <div class="sect"><div class="eyebrow">What it is</div><p>${v.what}</p>
+        ${v.caveat?`<div class="caveatbox"><b>Read this figure carefully</b><p>${v.caveat}</p></div>`:""}
+        ${v.domicile?`<p class="otherb"><b>Legal domicile:</b> ${v.domicile} — differs from where it actually operates. Datasets keyed on incorporation systematically miscount these.</p>`:""}
+      </div>
+      ${!v.caveat?`<div class="sect"><div class="eyebrow">Why it's on the radar</div><p>${v.why}</p></div>`:""}
+      <div class="sect">
+        <div class="eyebrow">Tracked operators${v.backers.length?" — "+v.backers.length:""}</div>
+        <div class="backers">
+          ${v.pos.length ? [...v.pos].sort((a,b)=>b.w-a.w).map(p=>
+            `<button class="backer" type="button" data-op="${p.op}">
+               <canvas data-nm="${O[p.op].name}" aria-hidden="true"></canvas>
+               <span><span class="bn">${O[p.op].name}</span><br><span class="br">${O[p.op].vehicle}</span></span>
+               <span class="bflag" style="color:${ROLE_HUE[p.key]};border-color:color-mix(in srgb,${ROLE_HUE[p.key]} 42%,transparent)">${ROLE_DEF[p.key].short}${p.past?" ·past":""}</span>
+             </button>`).join("")
+            : `<p class="otherb">No tracked operator holds a disclosed position — shown for theme context.</p>`}
+        </div>
+        <p class="otherb"><b>Other backers:</b> ${v.others}</p>
+        <p class="otherb"><b>Last round:</b> ${v.last}</p>
+      </div>
+    </div>`;
+  showPanel(html,t.hue);
+  sigil($("#pv"),v.name,t.hue,60);
+  $("#panel").querySelectorAll(".backer").forEach(btn=>{
+    portrait(btn.querySelector("canvas"),btn.querySelector("canvas").dataset.nm,26);
+    btn.addEventListener("click",()=>openOperator(btn.dataset.op));
+  });
+}
+
+function openOperator(id){
+  lastFocus=document.activeElement;
+  const o=O[id], byTheme={};
+  o.book.forEach(v=>{ (byTheme[v.theme] ||= []).push(v); });
+  const order=ranked.filter(t=>byTheme[t.id]);
+  const html=`
+    <div class="panel-hd">
+      <button class="panel-close" type="button" aria-label="Close">✕</button>
+      <div class="panel-id"><canvas id="po" aria-hidden="true"></canvas>
+        <div><div class="eyebrow">${o.vehicle} · ${REGIONS[o.region].n}</div>
+          <h3 id="panel-title">${o.name}</h3><div class="op-role">${o.role}</div></div></div>
+    </div>
+    <div class="panel-bd">
+      <div class="facts">
+        <div class="fact"><span>Positions</span><b>${o.book.length}</b></div>
+        <div class="fact"><span>Board or deeper</span><b style="color:${o.deepRoles.length?"var(--up)":"var(--ink-4)"}">${o.deepRoles.length}</b></div>
+        <div class="fact"><span>Commitment</span><b>${o.commit.toFixed(0)}</b></div>
+        <div class="fact"><span>Tracked value</span><b>${money(o.exposure)}</b></div>
+      </div>
+      <div class="sect"><div class="eyebrow">Thesis</div><p>${o.thesis}</p></div>
+      ${order.map(t=>`
+        <div class="sect"><div class="eyebrow" style="color:${lite(t.hue)}">${t.name}</div>
+          <div class="plist">${byTheme[t.id].sort((a,b)=>roleOf(b.id,o.id).w-roleOf(a.id,o.id).w||b.v-a.v).map(v=>{
+            const rp=roleOf(v.id,o.id);
+            return `<button class="pitem" type="button" data-v="${v.id}" style="--hue2:${t.hue}">
+               <span class="sw"></span>
+               <span><span class="pn">${v.name}${rp.w>1?` <span class="rolebadge" style="--rw:${ROLE_HUE[rp.key]}">${ROLE_DEF[rp.key].short}${rp.past?" ·past":""}</span>`:""}</span><br>
+                 <span class="pt">${v.tag}</span></span>
+               <span class="pv">${v.listed?"Listed":v.v>0?money(v.v):"—"}</span>
+             </button>`;}).join("")}</div>
+        </div>`).join("")}
+      ${o.book.length ? `<div class="sect"><button class="fchip" type="button" id="filterop" aria-pressed="${S.op===o.id}">
+          <span class="dot"></span>${S.op===o.id?"Clear radar filter":"Filter the whole radar to "+o.name.split(" ").slice(-1)[0]}</button></div>`
+        : `<div class="sect"><p class="otherb">No equity positions tracked — this operator funds protocols and open-source commons rather than taking equity.</p></div>`}
+    </div>`;
+  showPanel(html,"#f0a53c");
+  portrait($("#po"),o.name,60);
+  $("#panel").querySelectorAll(".pitem").forEach(b=>b.addEventListener("click",()=>openVenture(b.dataset.v)));
+  const f=$("#filterop");
+  if(f) f.addEventListener("click",()=>{ S.op = S.op===o.id?null:o.id; closePanel(); renderAll(); });
+}
+
+function openTheme(id){
+  lastFocus=document.activeElement;
+  const t=T[id];
+  const html=`
+    <div class="panel-hd">
+      <button class="panel-close" type="button" aria-label="Close">✕</button>
+      <div class="panel-id"><canvas id="pt" aria-hidden="true"></canvas>
+        <div><div class="eyebrow" style="color:${lite(t.hue)}">${t.grade==="early"?"Emergent":t.grade==="mid"?"Building":"Mature"} theme</div>
+          <h3 id="panel-title">${t.name}</h3></div></div>
+    </div>
+    <div class="panel-bd">
+      <div class="facts">
+        <div class="fact"><span>Emergence</span><b style="color:${lite(t.hue)}">${Math.round(t.emergence)}</b></div>
+        <div class="fact"><span>Conviction</span><b>${t.conviction} ops</b></div>
+        <div class="fact"><span>Ventures</span><b>${t.cos.length}</b></div>
+        <div class="fact"><span>Tracked value</span><b>${money(t.cap)}</b></div>
+      </div>
+      <div class="sect"><div class="eyebrow">The thesis</div><p>${t.blurb}</p></div>
+      <div class="sect"><div class="eyebrow">Emergence factors</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+        ${t.factors.map(f=>`
+          <div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-bottom:4px">
+              <span>${f[0]}</span><b style="color:var(--ink-2)">${Math.round(f[1])}</b></div>
+            <div class="fbar"><i style="width:${f[1].toFixed(0)}%;background:${t.hue}"></i></div>
+            <div style="font-size:11.5px;color:var(--ink-4);margin-top:4px;line-height:1.45">${f[2]}</div>
+          </div>`).join("")}
+        </div>
+      </div>
+      <div class="sect"><div class="eyebrow">Ventures</div>
+        <div class="plist">${[...t.cos].sort((a,b)=>b.v-a.v).map(v=>
+          `<button class="pitem" type="button" data-v="${v.id}" style="--hue2:${t.hue}">
+             <span class="sw"></span>
+             <span><span class="pn">${v.name}</span><br><span class="pt">${v.tag}</span></span>
+             <span class="pv">${v.v>0?money(v.v):"—"}</span></button>`).join("")}</div>
+      </div>
+    </div>`;
+  showPanel(html,t.hue);
+  sigil($("#pt"),t.name,t.hue,60);
+  $("#panel").querySelectorAll(".pitem").forEach(b=>b.addEventListener("click",()=>openVenture(b.dataset.v)));
+}
+
+function openHub(id){
+  lastFocus=document.activeElement;
+  const hub=HUBS[id];
+  const cos=VENTURES.filter(v=>v.hub===id).sort((a,b)=>b.v-a.v);
+  const cap=cos.reduce((s,v)=>s+v.v,0);
+  const ops=[...new Set(cos.flatMap(v=>v.backers))];
+  const html=`
+    <div class="panel-hd">
+      <button class="panel-close" type="button" aria-label="Close">✕</button>
+      <div class="panel-id"><canvas id="ph" aria-hidden="true"></canvas>
+        <div><div class="eyebrow" style="color:${lite(REGIONS[hub.r].hue)}">${REGIONS[hub.r].n}</div>
+          <h3 id="panel-title">${hub.n}</h3>
+          <div class="op-role">${hub.c[1].toFixed(2)}° ${hub.c[1]>=0?"N":"S"} · ${Math.abs(hub.c[0]).toFixed(2)}° ${hub.c[0]>=0?"E":"W"}</div></div></div>
+    </div>
+    <div class="panel-bd">
+      <div class="facts">
+        <div class="fact"><span>Ventures</span><b>${cos.length}</b></div>
+        <div class="fact"><span>Tracked value</span><b>${money(cap)}</b></div>
+        <div class="fact"><span>Operators present</span><b>${ops.length}</b></div>
+      </div>
+      <div class="sect"><div class="eyebrow">Based here</div>
+        <div class="plist">${cos.map(v=>
+          `<button class="pitem" type="button" data-v="${v.id}" style="--hue2:${T[v.theme].hue}">
+             <span class="sw"></span>
+             <span><span class="pn">${v.name}</span><br><span class="pt">${T[v.theme].name}</span></span>
+             <span class="pv">${v.v>0?money(v.v):"—"}</span></button>`).join("")}</div>
+      </div>
+    </div>`;
+  showPanel(html,REGIONS[hub.r].hue);
+  sigil($("#ph"),hub.n,REGIONS[hub.r].hue,60);
+  $("#panel").querySelectorAll(".pitem").forEach(b=>b.addEventListener("click",()=>openVenture(b.dataset.v)));
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+/* How many ventures a chip would yield given every OTHER active filter —
+   so the number on the chip is what you actually get if you press it. */
+function countIf(over){
+  const save={themes:S.themes,regions:S.regions,kinds:S.kinds,stages:S.stages};
+  Object.assign(S,over);
+  const n=VENTURES.filter(matches).length;
+  Object.assign(S,save);
+  return n;
+}
+
+/* Which filter groups actually change anything on each view. Views that are
+   whole-board analyses (Brief, Horizon, Convergence) take none, so the bar
+   disappears entirely rather than sitting there doing nothing. */
+const VIEW_FILTERS={
+  brief:[], horizon:[], conv:[],
+  radar:["theme","stage","region","kind"],
+  niche:["theme","stage"],
+  mom:[],
+  vent:["theme","stage","region","kind"],
+  ops:["region","kind"],
+
+  expo:["theme"]
+};
+
+function syncControls(){
+  const groups=VIEW_FILTERS[S.view]||[];
+  const bar=$("#controls");
+  bar.hidden = groups.length===0;
+  if(bar.hidden){ $("#fpanel").hidden=true; $("#ftoggle").setAttribute("aria-expanded","false"); return; }
+  $("#stagefilters").hidden = !groups.includes("stage");
+  $("#filters").hidden    = !groups.includes("theme");
+  $("#regfilters").hidden = !groups.includes("region");
+  $("#kindfilters").hidden= !groups.includes("kind");
+  renderActivePills();
+}
+
+function renderActivePills(){
+  const host=$("#activepills"); host.innerHTML="";
+  const groups=VIEW_FILTERS[S.view]||[];
+  const add=(label,kind,onClear)=>{
+    const b=el("button","apill",`<em>${kind}</em>${label}<span>✕</span>`); b.type="button";
+    b.title=`Remove this filter`;
+    b.addEventListener("click",()=>{ onClear(); renderFilters(); renderAll(); });
+    host.appendChild(b);
+  };
+  if(groups.includes("theme")) S.themes.forEach(id=>add(T[id].name,"Theme",()=>S.themes.delete(id)));
+  if(groups.includes("region")) S.regions.forEach(id=>add(REGIONS[id].n,"Region",()=>S.regions.delete(id)));
+  if(groups.includes("stage")) S.stages.forEach(id=>{const b=STAGE_BUCKETS.find(x=>x[0]===id); add(b?b[1]:id,"Stage",()=>S.stages.delete(id));});
+  if(groups.includes("kind")) S.kinds.forEach(id=>add(KIND_LBL[id]+"s","Backer",()=>S.kinds.delete(id)));
+  if(S.op) add(O[S.op].name,"Operator",()=>S.op=null);
+
+  const n=host.children.length;
+  $("#fcount").textContent = n||"";
+  $("#clear").hidden = n===0 && !S.q;
+}
+
+function renderFilters(){
+  const host=$("#filters");
+  host.querySelectorAll(".fchip").forEach(n=>n.remove());
+  ranked.forEach(t=>{
+    const on=S.themes.has(t.id);
+    const next=new Set(S.themes); on?next.delete(t.id):next.add(t.id);
+    const n=countIf({themes:next.size?next:new Set([t.id])});
+    const b=el("button","fchip",
+      `<span class="swatch" style="background:${t.hue}"></span>${t.name}<b class="cnt">${n}</b>`);
+    b.type="button";
+    b.setAttribute("aria-pressed",on?"true":"false");
+    b.title=`${t.name} — ${t.cos.length} ventures on the board, ${t.conviction} backers, emergence ${Math.round(t.emergence)}`;
+    b.addEventListener("click",()=>{
+      S.themes.has(t.id)?S.themes.delete(t.id):S.themes.add(t.id);
+      if(S.themes.has(t.id)) S.open.add(t.id);
+      renderFilters(); renderAll();
+    });
+    host.appendChild(b);
+  });
+  const sh=$("#stagefilters");
+  sh.querySelectorAll(".fchip").forEach(n=>n.remove());
+  STAGE_BUCKETS.forEach(([k,label,hue])=>{
+    const on=S.stages.has(k);
+    const next=new Set(S.stages); on?next.delete(k):next.add(k);
+    const n=countIf({stages:next.size?next:new Set([k])});
+    const b=el("button","fchip",`<span class="swatch" style="background:${hue}"></span>${label}<b class="cnt">${n}</b>`);
+    b.type="button";
+    b.setAttribute("aria-pressed",on?"true":"false");
+    b.title="Ventures at this stage, by normalised maturity";
+    b.addEventListener("click",()=>{ S.stages.has(k)?S.stages.delete(k):S.stages.add(k); renderFilters(); renderAll(); });
+    sh.appendChild(b);
+  });
+  const kh=$("#kindfilters");
+  kh.querySelectorAll(".fchip").forEach(n=>n.remove());
+  KINDS.forEach(([k,label,hue])=>{
+    const on=S.kinds.has(k);
+    const next=new Set(S.kinds); on?next.delete(k):next.add(k);
+    const n=countIf({kinds:next.size?next:new Set([k])});
+    const b=el("button","fchip",`<span class="swatch" style="background:${hue}"></span>${label}<b class="cnt">${n}</b>`);
+    b.type="button";
+    b.setAttribute("aria-pressed",on?"true":"false");
+    b.title=`Ventures with at least one backer of this type`;
+    b.addEventListener("click",()=>{ S.kinds.has(k)?S.kinds.delete(k):S.kinds.add(k); renderFilters(); renderAll(); });
+    kh.appendChild(b);
+  });
+
+  const rh=$("#regfilters");
+  rh.querySelectorAll(".fchip").forEach(n=>n.remove());
+  Object.entries(REGIONS).forEach(([k,r])=>{
+    const on=S.regions.has(k);
+    const next=new Set(S.regions); on?next.delete(k):next.add(k);
+    const n=countIf({regions:next.size?next:new Set([k])});
+    const b=el("button","fchip",`<span class="swatch" style="background:${r.hue}"></span>${r.n}<b class="cnt">${n}</b>`);
+    b.type="button";
+    b.setAttribute("aria-pressed",on?"true":"false");
+    b.title=`${r.n} — ventures headquartered here`;
+    b.addEventListener("click",()=>{
+      S.regions.has(k)?S.regions.delete(k):S.regions.add(k);
+      renderFilters(); renderAll();
+    });
+    rh.appendChild(b);
+  });
+  renderActivePills(); renderFilterSummary();
+}
+
+/* Live readout so a filter's effect is legible instead of guessed at. */
+function renderFilterSummary(){
+  const el2=$("#fsummary"); if(!el2) return;
+  const vis=VENTURES.filter(matches);
+  const cap=vis.filter(v=>!v.listed).reduce((s,v)=>s+v.v,0);
+  const themes=new Set(vis.map(v=>v.theme)).size;
+  const ops=new Set(vis.flatMap(v=>v.backers)).size;
+  const noHub=vis.filter(v=>!v.hub).length;
+  const active=S.themes.size+S.regions.size+S.kinds.size+(S.op?1:0)+(S.q?1:0);
+  el2.innerHTML =
+    `<b>${vis.length}</b> of ${VENTURES.length} ventures` +
+    `<span>·</span><b>${themes}</b> themes` +
+    `<span>·</span><b>${ops}</b> backers` +
+    `<span>·</span><b>${money(cap)}</b> tracked` +
+    (active?`<span class="fs-on">${active} filter${active===1?"":"s"} active</span>`:"") +
+    (S.regions.size&&noHub?`<span class="fs-warn" title="These ventures have no disclosed headquarters, so a region filter cannot include them">${noHub} unplaced</span>`:"");
+}
+
+/* Only the visible view is built. The other eight are marked stale and
+   rendered the first time they are opened. Filters invalidate all of them
+   but still only repaint what is on screen. */
+const RENDERERS={
+  brief:renderBrief, radar:renderBands, horizon:renderHorizon, niche:renderNiches,
+  conv:renderHeat,   ops:renderOps,
+  expo:renderExposure, vent:renderVentures, mom:renderMomentum
+};
+const STALE=new Set(Object.keys(RENDERERS));
+
+function renderView(k){
+  const fn=RENDERERS[k];
+  if(fn){ fn(); STALE.delete(k); }
+}
+function renderAll(){
+  readouts();
+  Object.keys(RENDERERS).forEach(k=>STALE.add(k));
+  renderView(S.view);
+}
+
+/* ---------- navigation: six groups, some with sub-tabs ----------
+   Ten separate views was too many top-level choices. Related views are
+   grouped and reached by a secondary tab strip instead. */
+const GROUPS=[
+  {id:"brief",  label:"Brief",     views:[["brief",null]]},
+  {id:"trends", label:"Trends",    views:[["radar","Themes"],["niche","Niches"]]},
+  {id:"mom",    label:"Momentum",  views:[["mom",null]]},
+  {id:"signal", label:"Signal",    views:[["horizon","Horizon"],["conv","Convergence"]]},
+  {id:"index",  label:"Ventures",  views:[["vent","Companies"],["ops","People"]]},
+  {id:"expo",   label:"Exposure",  views:[["expo",null]]}
+];
+const GROUP_OF={}; GROUPS.forEach(g=>g.views.forEach(([v])=>GROUP_OF[v]=g.id));
+
+function showView(v){
+  S.view=v;
+  const g=GROUPS.find(x=>x.id===GROUP_OF[v]);
+  document.querySelectorAll(".navlink").forEach(x=>x.setAttribute("aria-selected",x.dataset.g===g.id?"true":"false"));
+  document.querySelectorAll(".view").forEach(s=>s.classList.remove("on"));
+  $("#v-"+v).classList.add("on");
+
+  const sub=$("#subtabs");
+  if(g.views.length>1){
+    sub.hidden=false; sub.innerHTML="";
+    g.views.forEach(([id,label])=>{
+      const b=el("button","subtab",label); b.type="button";
+      b.setAttribute("aria-pressed",id===v?"true":"false");
+      b.addEventListener("click",()=>showView(id));
+      sub.appendChild(b);
+    });
+  } else sub.hidden=true;
+
+  syncControls();
+  // Build on first open, or rebuild if a filter invalidated it while hidden.
+  // Atlas always repaints — its canvas needs a laid-out container to size against.
+  if(STALE.has(v)) renderView(v);
+}
+
+function renderNav(){
+  const host=$("#navrail"); host.innerHTML="";
+  GROUPS.forEach((g,i)=>{
+    const b=el("button","navlink",`<i>${String(i).padStart(2,"0")}</i>${g.label}`);
+    b.type="button"; b.setAttribute("role","tab"); b.dataset.g=g.id;
+    b.setAttribute("aria-selected", GROUP_OF[S.view]===g.id ? "true":"false");
+    b.addEventListener("click",()=>showView(g.views[0][0]));
+    host.appendChild(b);
+  });
+}
+
+let qt;
+$("#q").addEventListener("input",e=>{ clearTimeout(qt); qt=setTimeout(()=>{ S.q=e.target.value.trim().toLowerCase(); renderAll(); },120); });
+$("#clear").addEventListener("click",()=>{
+  S.q=""; S.themes.clear(); S.regions.clear(); S.kinds.clear(); S.stages.clear(); S.op=null; $("#q").value="";
+  renderFilters(); renderAll();
+});
+$("#ftoggle").addEventListener("click",()=>{
+  const p=$("#fpanel"), open=p.hidden;
+  p.hidden=!open; $("#ftoggle").setAttribute("aria-expanded",open?"true":"false");
+});
+$("#scrim").addEventListener("click",closePanel);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closePanel(); });
+
+const setOff=()=>document.documentElement.style.setProperty("--top-off",$(".masthead").offsetHeight+"px");
+new ResizeObserver(setOff).observe($(".masthead"));
+let rt; addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{
+    if(S.view==="brief") renderAtlas();
+    if(S.view==="niche" && nicheZoom) nicheZoom.relayout();
+    if(S.view==="horizon") renderHorizon();
+    if(S.view==="conv") renderHeat();
+  },160); });
+
+sigil($("#brandmark"),"Founder Radar Console","#f0a53c",34);
+renderNav(); renderFilters(); renderGrad(); renderAll(); showView("brief"); setOff();
+
+})();
+</script>
