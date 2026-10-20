@@ -302,6 +302,14 @@ AgiBot, Galbot), now merged.
 
 ---
 
+## Author
+
+Built by **Leon Messmer**. Research, dataset, scoring method and dashboard.
+
+Corrections and sources are welcome as issues.
+
+---
+
 ## Licence
 
 Code **MIT**. Dataset **CC BY 4.0**. See [LICENSE](LICENSE).
