@@ -1,7 +1,7 @@
-<title>Founder Radar — Where the Builders Are Putting Their Money</title>
+<title>Pre-Consensus — What the Builders Back Before the Market Does</title>
 <style>
 /* ============================================================
-   FOUNDER RADAR
+   PRE-CONSENSUS
    A signals console for private-market conviction.
    Committed dark identity (per brief). Tokens are theme-stable so the
    viewer's light toggle lifts the ground rather than inverting an
@@ -800,6 +800,43 @@ h1,h2,h3,h4,h5{margin:0;font-family:var(--font-display);font-weight:600;text-wra
 .mo-ticks{position:relative;height:16px}
 .mo-ticks span{position:absolute;transform:translateX(-50%);font-family:var(--font-mono);font-size:9.5px;color:var(--ink-4);letter-spacing:.08em}
 
+/* signal table and round tape */
+.mo-block{margin-top:26px}
+.mo-hd{margin-bottom:11px}
+.mo-hd p{margin:6px 0 0;max-width:78ch;font-size:13px;line-height:1.6;color:var(--ink-3)}
+.mo-hd p b{color:var(--ink-2)}
+.mo-sig{min-width:900px}
+.mo-sig td{font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.mo-sig td em{display:block;font-style:normal;font-size:9px;color:var(--ink-4);margin-top:2px;letter-spacing:.03em}
+.mo-sig td em.was{display:inline;margin:0 0 0 2px}
+.mo-sig thead button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:baseline}
+.mo-sig thead button:hover,.mo-sig thead button[aria-sort]{color:var(--signal)}
+.mo-sig thead button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.mo-sig tbody th button{all:unset;cursor:pointer}
+.mo-sig tbody th button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.mo-sig tbody tr.on th,.mo-sig tbody tr:hover th{text-decoration:underline;text-underline-offset:3px}
+.mo-sig tbody tr.on{background:var(--signal-dim)}
+.mo-sig .warnmark{color:var(--warn);margin-left:4px;cursor:help}
+.spark{display:block;width:120px;height:28px;overflow:visible}
+.mo-note{margin:8px 0 0;font-family:var(--font-mono);font-size:10.5px;line-height:1.6;color:var(--ink-4);max-width:100ch}
+.mo-tapebar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tape{border-collapse:separate;border-spacing:0;width:100%;min-width:680px;font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums}
+.tape th,.tape td{padding:7px 11px;text-align:left;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap}
+.tape thead th{font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-4);font-weight:500;border-bottom-color:var(--line)}
+.tape td{color:var(--ink-2)}
+.tape td.n{text-align:right}
+.tape tbody tr{cursor:pointer}
+.tape tbody tr:hover td{background:rgba(255,255,255,.025);color:var(--ink)}
+.tape .vn{all:unset;cursor:pointer;color:var(--ink);font-family:var(--font-body);font-size:13px}
+.tape .vn:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.tape .tb{display:block;height:5px;min-width:2px;background:var(--hue);border-radius:1px;opacity:.85}
+.tape .up{color:var(--crit)}
+.tape .dn{color:var(--ink-4)}
+.mo-more{margin-top:10px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:8px 13px;cursor:pointer}
+.mo-more:hover{color:var(--signal);border-color:var(--signal-line)}
+.mo-more[hidden]{display:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
 .grad{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line-bright);border-radius:2px;padding:11px 14px;margin-bottom:20px;background:rgba(255,255,255,.014)}
 .grad .lbl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4)}
 .grad .item{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2)}
@@ -874,7 +911,7 @@ h1,h2,h3,h4,h5{margin:0;font-family:var(--font-display);font-weight:600;text-wra
     <div class="masthead-in">
       <div class="brand">
         <canvas id="brandmark" width="68" height="68" aria-hidden="true"></canvas>
-        <div class="brand-txt"><h1>Founder Radar</h1><p>Private-market conviction index</p></div>
+        <div class="brand-txt"><h1>Pre-Consensus</h1><p>Private-market conviction index</p></div>
       </div>
       <div class="readouts">
         <div class="readout"><b id="r-ops">—</b><span>Operators</span></div>
@@ -1071,6 +1108,25 @@ h1,h2,h3,h4,h5{margin:0;font-family:var(--font-display);font-weight:600;text-wra
         <div class="momentum">
           <div class="mo-scroll"><div id="lanes"></div><div class="mo-axis"><div></div><div class="mo-ticks" id="ticks"></div></div></div>
         </div>
+
+        <div class="mo-block">
+          <div class="mo-hd">
+            <div class="eyebrow">Signal table — the derivatives</div>
+            <p>Totals say where money is. These say which way it is moving. <b>Momentum</b> is trailing-twelve-month capital against the twelve months before. <b>Acceleration</b> compares that with the same reading six months ago — a theme can still be growing while it slows. <b>Cadence</b> is the median gap between a company's consecutive rounds: when it shortens, investors are competing to get back in. Click a column to sort, a theme to filter the tape.</p>
+          </div>
+          <div class="ftab-scroll"><table class="ftab mo-sig" id="mo-sig"></table></div>
+          <p class="mo-note" id="mo-note"></p>
+        </div>
+
+        <div class="mo-block">
+          <div class="mo-hd">
+            <div class="eyebrow">Round tape</div>
+            <p>Every dated round on the board, newest first. <b>Step</b> is the round's size against the same company's previous round — a 3× step means the next cheque was three times the last one.</p>
+          </div>
+          <div class="mo-tapebar" id="mo-tapebar"></div>
+          <div class="ftab-scroll"><table class="tape" id="mo-tape"></table></div>
+          <button class="mo-more" type="button" id="mo-more" hidden></button>
+        </div>
       </section>
 
     </main>
@@ -1096,56 +1152,83 @@ h1,h2,h3,h4,h5{margin:0;font-family:var(--font-display);font-weight:600;text-wra
 /*__DATA__*/
 
 /* ============================================================
-   MERGE — seedlings and funds fold into the main model
+   LOAD — dataset/*.csv arrives as `DB`, column-oriented with every value a
+   string. Type it, then rebuild the object model the views are written against.
    ============================================================ */
 
-/* Operator classes. `builder` runs or founds things; `allocator` is a person
+const NUM  = new Set(["lon","lat","maturity","valuation_usd_b","raise_usd_m","year_frac","amount_usd_m"]);
+const BOOL = new Set(["public_proxy","valuation_reported","crossover","listed","state_capital","grant",
+                      "disclosed_stake","built","role_past"]);
+const table = name => DB[name].rows.map(r=>Object.fromEntries(DB[name].cols.map((c,i)=>
+  [c, BOOL.has(c) ? r[i]==="1" : NUM.has(c) ? (r[i]===""?null:Number(r[i])) : r[i]])));
+const groupBy = (rows,key) => rows.reduce((m,r)=>((m[r[key]] ||= []).push(r), m), {});
+
+const THEMES  = table("themes").map(t=>({id:t.id, name:t.name, hue:t.hue, proxy:t.public_proxy, blurb:t.blurb}));
+const REGIONS = Object.fromEntries(table("regions").map(r=>[r.id, {n:r.name, hue:r.hue}]));
+const HUBS    = Object.fromEntries(table("hubs").map(h=>[h.id, {n:h.name, c:[h.lon,h.lat], r:h.region_id}]));
+
+/* Backer classes. `builder` runs or founds things; `allocator` is a person
    whose primary act is deploying capital; `fund` is an institution. Splitting
    them fixes the flaw where a firm with fifty partners counted the same as one
-   angel — and lets the board be read founders-only. */
-const ALLOCATORS = new Set(["thiel","khosla","kushner","andreessen","gil","lonsdale","naval","nfdg","neilshen","son"]);
-/* An operator carrying a region that no longer exists must never crash a
-   render — this bit once. Fall back to the largest region instead. */
-OPERATORS.forEach(o=>{
-  o.kind = ALLOCATORS.has(o.id) ? "allocator" : "builder";
-  if(!REGIONS[o.region]) o.region="na";
-});
-FUNDS.forEach(f=>{ f.kind="fund"; f.role="Venture fund"; OPERATORS.push(f); });
+   angel — and lets the board be read founders-only. A region that no longer
+   exists must never crash a render — this bit once — so fall back to the
+   largest region. */
+const OPERATORS = table("backers").map(o=>({id:o.id, name:o.name, role:o.role,
+  region: REGIONS[o.region_id] ? o.region_id : "na", vehicle:o.vehicle, thesis:o.thesis, kind:o.kind}));
 
-/* Seedlings: compact rows expanded to the full venture shape. Valuation is
-   deliberately absent — most have never disclosed one. */
-SEEDLINGS.forEach(([id,name,theme,tag,stage,m,funds,hub])=>{
-  if(hub && !HUBS[hub]) hub=null;   // guard: unknown hub id must never reach the atlas
-  VENTURES.push({
-    id, name, theme, tag, stage, m, hub: hub||null,
-    v:0, undisclosed:true, seed:true,
-    what:`${tag}. Surfaced from the published portfolio of ${funds.map(f=>(OPERATORS.find(o=>o.id===f)||{}).name||f).join(", ")}.`,
-    why:"One of the smaller positions on the board. Included because the emergence signal lives at this end — these are the companies a theme is made of before it has a headline.",
-    backers:funds, others:"See fund portfolio", rounds:[], last:stage
-  });
-});
+/* Positions carry both whether a backer holds a disclosed stake and, where
+   public reporting shows it, how they are involved. ROLES is the lookup the
+   scoring code reads; anything absent there defaults to "capital". */
+const POSITIONS = table("positions");
+const ROLES = {};
+POSITIONS.forEach(p=>{ if(p.role) (ROLES[p.venture_id] ||= {})[p.backer_id] = p.role+(p.role_past?"|past":""); });
+const STAKES = groupBy(POSITIONS.filter(p=>p.disclosed_stake), "venture_id");
+const ROUNDS = groupBy(table("rounds"), "venture_id");
+const backersOf = id => (STAKES[id]||[]).map(p=>p.backer_id);
 
-/* Global layer: the regional research. Carries three fields the US-only data
-   never needed — how much to trust the valuation, whether the entity is even a
-   venture-backed company, and whether state capital is on the cap table. */
-GLOBAL_OPS.forEach(f=>{ f.kind="fund"; f.role="Fund / institution"; OPERATORS.push(f); });
-
+/* Ventures come from four research layers that carry different depth:
+   headline     hand-written profiles with dated rounds
+   seedling     surfaced from fund portfolio pages; no valuation published
+   regional     the eight-region research, with provenance grades
+   seed_round   verified pre-seed and seed rounds, with round size */
 const ENT_LABEL={state:"State entity",self:"Self-funded",spac:"SPAC-announced"};
-[...GLOBAL,...SEEDROUND].forEach(([id,name,theme,hub,tag,stage,m,v,backers,o])=>{
-  const opt=o||{};
-  if(hub && !HUBS[hub]) hub=null;
-  m = trueMaturity(m,opt.raise,v);      // label alone is not an earliness signal
-  VENTURES.push({
-    id, name, theme, tag, stage, m, hub: hub||null,
-    raise: opt.raise||0, uni: opt.uni||null, grant: !!opt.grant,
-    v: v||0, undisclosed: !v, rep: !!opt.rep, global:true,
-    conf: opt.conf||"low", ent: opt.ent||null, stateCap: !!opt.st,
-    domicile: opt.dom||null, caveat: opt.note||null,
-    what:`${tag}.`,
-    why: opt.note || "Added from the August 2026 regional research. See the confidence grade before relying on the valuation.",
-    backers: backers.filter(b=>b), others:"See research notes", rounds:[],
-    last: stage
-  });
+const VENTURES = table("ventures").map(r=>{
+  const hub = r.hub_id && HUBS[r.hub_id] ? r.hub_id : null;   // unknown hub must never reach the atlas
+  const base = {id:r.id, name:r.name, theme:r.theme_id, tag:r.tagline, stage:r.stage, hub, backers:backersOf(r.id)};
+
+  if(r.layer==="headline"){
+    const v = {...base, v:r.valuation_usd_b, m:r.maturity, what:r.what, why:r.why,
+      built:(STAKES[r.id]||[]).filter(p=>p.built).map(p=>p.backer_id), others:r.other_backers,
+      rounds:(ROUNDS[r.id]||[]).map(x=>[x.year_frac,x.amount_usd_m]), last:r.last_round};
+    if(r.valuation_reported) v.rep=true;
+    if(r.crossover) v.cross=true;
+    if(r.listed) v.listed=true;
+    // provenance, present where a headline row was reconciled with the regional research
+    if(r.confidence) v.conf=r.confidence;
+    if(r.entity_type) v.ent=r.entity_type;
+    if(r.state_capital) v.stateCap=true;
+    if(r.domicile) v.domicile=r.domicile;
+    if(r.caveat) v.caveat=r.caveat;
+    return v;
+  }
+
+  if(r.layer==="seedling") return {...base, m:r.maturity, v:0, undisclosed:true,
+    what:`${r.tagline}. Surfaced from the published portfolio of ${base.backers.map(f=>(OPERATORS.find(o=>o.id===f)||{}).name||f).join(", ")}.`,
+    why:"One of the smaller positions on the board. Included because the emergence signal lives at this end — these are the companies a theme is made of before it has a headline.",
+    others:"See fund portfolio", rounds:[], last:r.stage};
+
+  /* regional and seed_round: three fields the US-only data never needed — how
+     much to trust the valuation, whether the entity is even a venture-backed
+     company, and whether state capital is on the cap table. */
+  return {...base,
+    m: trueMaturity(r.maturity, r.raise_usd_m, r.valuation_usd_b),   // label alone is not an earliness signal
+    raise: r.raise_usd_m||0, uni: r.university||null, grant: r.grant,
+    v: r.valuation_usd_b||0, undisclosed: !r.valuation_usd_b, rep: r.valuation_reported,
+    conf: r.confidence||"low", ent: r.entity_type||null, stateCap: r.state_capital,
+    domicile: r.domicile||null, caveat: r.caveat||null,
+    what:`${r.tagline}.`,
+    why: r.caveat || "Added from the August 2026 regional research. See the confidence grade before relying on the valuation.",
+    others:"See research notes", rounds:[], last:r.stage};
 });
 
 /* ============================================================
@@ -2662,6 +2745,143 @@ function renderMomentum(){
   });
   const tk=$("#ticks"); tk.innerHTML="";
   for(let y=2022;y<=2026;y++){ const s=el("span",null,y); s.style.left=(((y-T0)/(T1-T0))*100).toFixed(2)+"%"; tk.appendChild(s); }
+
+  renderSignals(lanes);
+  renderTape(lanes);
+}
+
+/* ---------- momentum derivatives ----------
+   Every series here is a trailing-twelve-month sum evaluated at a point in
+   time. The window ending NOW is left open on the right, matching the lanes
+   above, so a round dated a few days past the snapshot still counts. */
+let moSort = {k:"rec", d:-1}, moTheme = null, moTapeAll = false;
+
+const t12 = (rs,t) => rs.reduce((s,r)=>s + (r.at>=t-1 && (t>=NOW || r.at<t) ? r.amt : 0), 0);
+/* `log` is the same clamped log-ratio as the niche map, so the two views read
+   together; it drives sorting and acceleration. `x` is the raw multiple, for
+   display — the clamp must not turn a real 10× into "new".
+   null when there is nothing in either window — that is "no data", not "flat". */
+const momAt = (rs,t) => { const rec=t12(rs,t), prv=t12(rs,t-1);
+  return !rec && !prv ? null
+       : {log: prv>0 ? Math.max(-2,Math.min(3,Math.log2(rec/prv))) : 3, x: prv>0 ? rec/prv : Infinity}; };
+const median = a => { if(!a.length) return null; const s=[...a].sort((x,y)=>x-y), h=s.length>>1;
+  return s.length%2 ? s[h] : (s[h-1]+s[h])/2; };
+const ratio = m => m===null ? "—" : m.x===Infinity ? "new" : m.x.toFixed(m.x<0.5?2:1)+"×";
+const usdM  = m => m>=1000 ? "$"+(m/1000).toFixed(m>=10000?0:1)+"B" : "$"+Math.round(m)+"M";
+
+function sparkline(rs,hue){
+  const pts=[]; for(let t=2022; t<NOW; t+=0.25) pts.push([t,t12(rs,t)]); pts.push([NOW,t12(rs,NOW)]);
+  const max=Math.max(1,...pts.map(p=>p[1])), W=120, H=28;
+  const xy=pts.map(([t,v])=>[((t-2022)/(NOW-2022))*W, H-2-(v/max)*(H-4)]);
+  const line=xy.map(p=>p.map(n=>n.toFixed(1)).join(",")).join(" ");
+  const [lx,ly]=xy[xy.length-1];
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+    <polygon points="0,${H} ${line} ${W},${H}" fill="${hue}" opacity=".14"/>
+    <polyline points="${line}" fill="none" stroke="${hue}" stroke-width="1.4" stroke-linejoin="round"/>
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.2" fill="${hue}"/></svg>`;
+}
+
+function renderSignals(lanes){
+  const host=$("#mo-sig"); if(!host) return;
+  const rows = lanes.map(({t,rs,rec})=>{
+    const mNow=momAt(rs,NOW), mThen=momAt(rs,NOW-0.5);
+    const gaps=[];
+    Object.values(rs.reduce((m,r)=>((m[r.v.id] ||= []).push(r.at), m),{}))
+      .forEach(a=>{ a.sort((x,y)=>x-y); for(let i=1;i<a.length;i++) gaps.push((a[i]-a[i-1])*12); });
+    return {t, rs, rec, mNow, mThen, mLog: mNow ? mNow.log : null,
+      accel: mNow && mThen ? mNow.log-mThen.log : null,
+      cadence: gaps.length>=3 ? median(gaps) : null, gapN: gaps.length,
+      medRound: median(rs.map(r=>r.amt)),
+      recentN: rs.filter(r=>r.at>=NOW-2).length};
+  });
+
+  const COLS=[
+    ["rec","T12M capital","Disclosed capital in the trailing twelve months"],
+    ["mLog","Momentum","Trailing twelve months against the twelve before. 'new' = nothing in the prior window"],
+    ["accel","Acceleration","Momentum now against momentum six months ago. ▲ = growth is speeding up"],
+    ["cadence","Cadence","Median months between a company's consecutive rounds. Needs three or more gaps"],
+    ["medRound","Median round","Median disclosed round size, all years"],
+    ["recentN","Rounds 24m","Dated rounds in the last two years — the sample behind these numbers"],
+    [null,"T12M since 2022","Rolling twelve-month capital, sampled quarterly. Each line is on its own scale: read shape, not height"]];
+  /* ↓ always means hottest first. For cadence that is the SHORTEST gap, so its
+     key is negated. Rows with no reading sink to the bottom in either direction. */
+  const key = r => moSort.k==="cadence" ? (r.cadence===null ? null : -r.cadence) : r[moSort.k];
+  rows.sort((a,b)=>{ const ka=key(a), kb=key(b);
+    if(ka===null || kb===null) return (ka===null)-(kb===null);
+    return (kb-ka)*(moSort.d<0 ? 1 : -1) || b.rec-a.rec; });
+
+  host.innerHTML = `<thead><tr><th scope="col">Theme</th>${COLS.map(([k,l,tip])=>`<th scope="col" title="${tip}">${
+      k ? `<button type="button" data-k="${k}"${moSort.k===k?` aria-sort="${moSort.d<0?"descending":"ascending"}"`:""}>${l}${moSort.k===k?(moSort.d<0?" ↓":" ↑"):""}</button>` : l}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r=>{
+      const thin = r.recentN<4;
+      const mCol = r.mLog===null ? "var(--ink-4)" : r.mLog>=1 ? "var(--crit)" : r.mLog<=-0.5 ? "var(--ink-4)" : "var(--ink-2)";
+      const aTxt = r.accel===null ? "—" : Math.abs(r.accel)<0.15 ? "steady"
+                 : (r.accel>0?"▲ ":"▼ ")+`<em class="was">was ${ratio(r.mThen)}</em>`;
+      return `<tr style="--hue:${r.t.hue}" class="${moTheme===r.t.id?"on":""}">
+        <th scope="row"><button type="button" data-t="${r.t.id}" aria-pressed="${moTheme===r.t.id}">${r.t.name}</button>${
+          thin?`<span class="warnmark" title="Fewer than four dated rounds in two years — treat these readings as anecdote">⚠</span>`:""}</th>
+        <td>${money(r.rec/1000)}</td>
+        <td style="color:${mCol}">${ratio(r.mNow)}</td>
+        <td style="color:${r.accel>0.15?"var(--signal)":"var(--ink-3)"}">${aTxt}</td>
+        <td>${r.cadence===null?"—":r.cadence.toFixed(0)+" mo"}<em>${r.gapN} gap${r.gapN===1?"":"s"}</em></td>
+        <td>${r.medRound===null?"—":usdM(r.medRound)}</td>
+        <td>${r.recentN}</td>
+        <td>${sparkline(r.rs,r.t.hue)}</td></tr>`;}).join("")}</tbody>`;
+
+  host.querySelectorAll("thead button").forEach(b=>b.addEventListener("click",()=>{
+    moSort = moSort.k===b.dataset.k ? {k:b.dataset.k, d:-moSort.d} : {k:b.dataset.k, d:-1};
+    renderSignals(lanes);
+  }));
+  host.querySelectorAll("tbody th button").forEach(b=>b.addEventListener("click",()=>{
+    moTheme = moTheme===b.dataset.t ? null : b.dataset.t; moTapeAll=false;
+    renderSignals(lanes); renderTape(lanes);
+  }));
+
+  const dated = VENTURES.filter(v=>v.rounds&&v.rounds.length).length;
+  $("#mo-note").textContent =
+    `Dated rounds exist for ${dated} of ${VENTURES.length} ventures — the hand-profiled headline set. Seedling, regional and seed-round ` +
+    `rows carry no round dates, so every figure here describes the larger, better-reported end of each theme. ` +
+    `A single large round swings a thin theme hard; ⚠ marks those.`;
+}
+
+function renderTape(lanes){
+  const host=$("#mo-tape"), bar=$("#mo-tapebar"), more=$("#mo-more"); if(!host) return;
+  bar.innerHTML="";
+  const chip=(id,label,hue)=>{
+    const b=el("button","fchip",(hue?`<span class="swatch" style="background:${hue}"></span>`:"")+label);
+    b.type="button"; b.setAttribute("aria-pressed",moTheme===id?"true":"false");
+    b.addEventListener("click",()=>{ moTheme=id; moTapeAll=false; renderSignals(lanes); renderTape(lanes); });
+    bar.appendChild(b);
+  };
+  chip(null,"All themes");
+  lanes.forEach(l=>chip(l.t.id,l.t.name,l.t.hue));
+
+  // step-up against the same company's previous round, computed before filtering
+  const all = lanes.flatMap(l=>l.rs.map(r=>({...r,t:l.t})));
+  const byV = all.reduce((m,r)=>((m[r.v.id] ||= []).push(r), m),{});
+  Object.values(byV).forEach(a=>{ a.sort((x,y)=>x.at-y.at); a.forEach((r,i)=>{ r.step = i ? r.amt/a[i-1].amt : null; }); });
+
+  const list = all.filter(r=>!moTheme || r.t.id===moTheme).sort((a,b)=>b.at-a.at);
+  const shown = moTapeAll ? list : list.slice(0,30);
+  const maxAmt = Math.max(1,...list.map(r=>r.amt));
+  const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const when = at => { const y=Math.floor(at); return `${y} ${MON[Math.min(11,Math.floor((at-y)*12))]}`; };
+
+  host.innerHTML = `<thead><tr><th scope="col">Date</th><th scope="col">Venture</th><th scope="col">Theme</th>
+      <th scope="col" class="n">Round</th><th scope="col" class="n" title="Against the same company's previous dated round">Step</th>
+      <th scope="col" style="width:28%"><span class="sr">Relative size</span></th></tr></thead>
+    <tbody>${shown.map(r=>`<tr data-v="${r.v.id}" style="--hue:${r.t.hue}">
+      <td>${when(r.at)}</td>
+      <td><button type="button" class="vn">${r.v.name}</button></td>
+      <td style="color:${lite(r.t.hue)}">${r.t.name}</td>
+      <td class="n">${usdM(r.amt)}</td>
+      <td class="n ${r.step===null?"":r.step>=1.5?"up":r.step<1?"dn":""}">${r.step===null?"first":r.step.toFixed(1)+"×"}</td>
+      <td><i class="tb" style="width:${Math.max(0.5,Math.sqrt(r.amt/maxAmt)*100).toFixed(1)}%"></i></td></tr>`).join("")}</tbody>`;
+  host.querySelectorAll("tbody tr").forEach(tr=>tr.addEventListener("click",()=>openVenture(tr.dataset.v)));
+
+  more.hidden = list.length<=30;
+  more.textContent = moTapeAll ? "Show latest 30" : `Show all ${list.length} rounds`;
+  more.onclick = ()=>{ moTapeAll=!moTapeAll; renderTape(lanes); };
 }
 
 /* ============================================================
@@ -3072,7 +3292,7 @@ let rt; addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{
     if(S.view==="conv") renderHeat();
   },160); });
 
-sigil($("#brandmark"),"Founder Radar Console","#f0a53c",34);
+sigil($("#brandmark"),"Pre-Consensus Console","#f0a53c",34);
 renderNav(); renderFilters(); renderGrad(); renderAll(); showView("brief"); setOff();
 
 })();

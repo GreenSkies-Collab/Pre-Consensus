@@ -1,6 +1,6 @@
 # Methodology
 
-Every score in Founder Radar, with its formula, the reasoning behind its construction,
+Every score in Pre-Consensus, with its formula, the reasoning behind its construction,
 what it does *not* claim, and the objection it invites.
 
 The last part matters most. A score you can't attack is a score you haven't understood.
@@ -174,6 +174,43 @@ Zero means flat. Used as the Y axis of the niche map.
 **Why logarithmic.** Raw percentage change produced readings like **"+5576%"** when a
 niche grew from near-zero. Arithmetically correct, analytically useless, and it made the
 axis unreadable. Log scale makes a doubling and a halving symmetrical around zero.
+
+The Momentum view's signal table shows the same quantity per theme, but displays the
+**raw multiple** (e.g. 2.4×). The clamp exists to keep a chart axis readable and must not
+turn a genuine 10× into a ceiling value. "new" means nothing was disclosed in the prior
+window. "—" means nothing in either window, which is no data, not flat.
+
+### Momentum derivatives (themes, Momentum view)
+
+All three are computed from the 203 dated rounds. Only the 91 hand-profiled headline
+ventures carry round dates, so these describe the larger, better-reported end of each
+theme. A theme with fewer than four dated rounds in two years is marked ⚠.
+
+```
+T12M(t)      = Σ round size with date in [t−1, t)      (window ending NOW left open)
+momentum(t)  = log2(T12M(t) / T12M(t−1)),  clamped [−2, +3]
+acceleration = momentum(NOW) − momentum(NOW − 0.5)
+cadence      = median over companies of months between consecutive rounds   (≥ 3 gaps)
+step         = round size / same company's previous round size              (round tape)
+```
+
+**Acceleration** separates "still growing" from "growing faster". A theme can post
+strong year-on-year momentum while that momentum is already falling. That pattern is
+what a top looks like before the totals turn. The six-month offset is a judgement call,
+not a fitted parameter: the two windows still share half their rounds, which damps
+noise but also slows the signal.
+
+**Cadence** measures competition for allocation. When the gap between a company's rounds
+shortens, investors are pre-empting rather than waiting for milestones. It is a median,
+not a mean, because a single bridge round two months after a priced round would
+otherwise dominate. It needs at least three gaps per theme to be shown at all.
+
+**Step** compares round sizes, not valuations. Round size is disclosed far more often
+than price, and a growing cheque size is the more robust signal across regions.
+
+**What these are not.** Like emergence, they have never been backtested. With 203 rounds
+spread across sixteen themes, one large round moves a thin theme's momentum by a
+whole doubling. Read the sign and the rank, not the decimal.
 
 ---
 

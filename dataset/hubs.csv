@@ -1,0 +1,95 @@
+id,name,lon,lat,region_id
+sfbay,SF Bay Area,-122.2,37.6,na
+la,Los Angeles,-118.3,33.95,na
+sea,Seattle,-122.3,47.6,na
+nyc,New York,-74,40.71,na
+bos,Boston,-71.1,42.36,na
+aus,Austin,-97.74,30.27,na
+den,Denver,-104.99,39.74,na
+cbus,Columbus,-82.99,39.96,na
+pit,Pittsburgh,-79.99,40.44,na
+mia,Miami,-80.19,25.76,na
+sd,San Diego,-117.16,32.72,na
+atl,Atlanta,-84.39,33.75,na
+det,Detroit,-83.05,42.33,na
+cor,Corvallis,-123.26,44.56,na
+tor,Toronto,-79.38,43.65,na
+pdx,Portland,-122.68,45.52,na
+chi,Chicago,-87.63,41.88,na
+day,Dayton,-84.19,39.76,na
+lon,London,-0.13,51.51,eu
+par,Paris,2.35,48.86,eu
+mun,Munich,11.58,48.14,eu
+ber,Berlin,13.4,52.52,eu
+sto,Stockholm,18.07,59.33,eu
+osl,Oslo,10.75,59.91,eu
+oul,Oulu,25.47,65.01,eu
+hel,Helsinki,24.94,60.17,eu
+cph,Copenhagen,12.57,55.68,eu
+ams,Amsterdam,4.9,52.37,eu
+zrh,Zurich,8.54,47.37,eu
+vie,Vienna,16.37,48.21,eu
+mad,Madrid,-3.7,40.42,eu
+mil,Milan,9.19,45.46,eu
+war,Warsaw,21.01,52.23,eu
+dub,Dublin,-6.26,53.35,eu
+cam,Cambridge UK,0.12,52.21,eu
+oxf,Oxford,-1.26,51.75,eu
+gva,Geneva & Lausanne,6.14,46.2,eu
+mst,Munster,7.63,51.96,eu
+edi,Edinburgh,-3.19,55.95,eu
+tln,Tallinn,24.75,59.44,eu
+gre,Grenoble,5.72,45.19,eu
+bcn,Barcelona,2.17,41.39,eu
+bei,Beijing,116.4,39.9,cn
+hgh,Hangzhou,120.16,30.27,cn
+sha,Shanghai,121.47,31.23,cn
+gua,Guangzhou,113.26,23.13,cn
+szx,Shenzhen,114.06,22.54,cn
+suz,Suzhou,120.62,31.3,cn
+whn,Wuhan,114.31,30.59,cn
+hfe,Hefei,117.28,31.86,cn
+xia,Xi'an,108.94,34.34,cn
+cdu,Chengdu,104.07,30.57,cn
+cgc,Changchun,125.32,43.82,cn
+czx,Changzhou,119.97,31.81,cn
+hkg,Hong Kong,114.17,22.32,cn
+tpe,Taipei,121.56,25.03,cn
+hsz,Hsinchu,120.97,24.81,cn
+blr,Bengaluru,77.59,12.97,in
+hyd,Hyderabad,78.49,17.39,in
+maa,Chennai,80.27,13.08,in
+noi,Delhi NCR,77.21,28.61,in
+pnq,Pune,73.86,18.52,in
+trv,Thiruvananthapuram,76.95,8.52,in
+tlv,Tel Aviv,34.78,32.08,me
+auh,Abu Dhabi,54.37,24.45,me
+ruh,Riyadh,46.72,24.71,me
+ist,Istanbul,28.98,41.01,me
+tok,Tokyo,139.69,35.69,ap
+kyo,Kyoto,135.77,35.01,ap
+osa,Osaka,135.5,34.69,ap
+ngo,Nagoya,136.91,35.18,ap
+sap,Sapporo,141.35,43.06,ap
+tjn,Daejeon,127.38,36.35,ap
+seo,Seoul,126.98,37.57,ap
+sin,Singapore,103.82,1.35,ap
+syd,Sydney,151.21,-33.87,ap
+mel,Melbourne,144.96,-37.81,ap
+bne,Brisbane,153.03,-27.47,ap
+adl,Adelaide,138.6,-34.93,ap
+cbr,Canberra,149.13,-35.28,ap
+akl,Auckland,174.76,-36.85,ap
+chc,Christchurch,172.64,-43.53,ap
+wlg,Wellington,174.78,-41.29,ap
+sao,Sao Paulo,-46.63,-23.55,latam
+bue,Buenos Aires,-58.38,-34.6,latam
+scl,Santiago,-70.67,-33.45,latam
+mex,Mexico City,-99.13,19.43,latam
+bog,Bogota,-74.07,4.71,latam
+lag,Lagos,3.38,6.52,africa
+nbo,Nairobi,36.82,-1.29,africa
+cpt,Cape Town,18.42,-33.92,africa
+jnb,Johannesburg,28.05,-26.2,africa
+cai,Cairo,31.24,30.04,africa
+kgl,Kigali,30.06,-1.94,africa

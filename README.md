@@ -1,10 +1,13 @@
-# Founder Radar
+# Pre-Consensus
 
 **A private-market conviction index.** It tracks what 78 technology operators, solo
 investors and deep-tech funds actually back in private companies — and scores every
 theme on *how early it still is*.
 
-527 ventures · 8 regions · 16 themes · 85 niches · snapshot August 2026
+524 ventures · 8 regions · 16 themes · 85 niches · 203 dated rounds · snapshot August 2026
+
+The dataset is a [relational CSV set with a SQL schema](dataset/) and builds into a
+queryable SQLite file. The dashboard is generated from it.
 
 ---
 
@@ -39,18 +42,19 @@ quadrant. High conviction plus low emergence is just consensus.
 
 | | |
 |---|---|
-| Private ventures | **527** (371 have never disclosed a valuation) |
-| Tracked value | **$3.25T** last-known post-money, private only |
+| Private ventures | **524** (371 have never disclosed a valuation) |
+| Tracked value | **$3.23T** last-known post-money, private only |
+| Dated funding rounds | **203**, 2021 – Aug 2026 |
 | Backers | **78** — 37 build or run things, the rest allocate |
 | Themes / niches | **16** / **85** (42 hold enough companies to score) |
 | Regions | **8**, all populated |
 | Verified pre-seed & seed rounds | **94** |
 
-**By region** — North America 196 · Europe 86 · Asia-Pacific 78 · Greater China 49 ·
+**By region** — North America 196 · Europe 86 · Asia-Pacific 78 · Greater China 46 ·
 India 29 · Middle East 26 · Africa 20 · Latin America 13
 
-**By stage** — Pre-seed & Seed 94 · Series A 89 · Series B–C 209 · Series D+ 119 ·
-Pre-IPO & Listed 16
+**By stage** — Pre-seed & Seed 94 · Series A 89 · Series B–C 208 · Series D+ 118 ·
+Pre-IPO & Listed 15
 
 Every row carries provenance: a confidence grade on the *valuation* (not the company),
 an entity-type flag where the figure is not a priced round at all, a state-capital
@@ -172,7 +176,7 @@ there's no outcome data to fit to. The Horizon view shows all six factors separa
 anyone can re-weight and check whether the ordering survives — mostly the top and bottom
 are stable and the middle shuffles.
 
-**Absence means "not found", never "does not exist."** 371 of 525 ventures have no
+**Absence means "not found", never "does not exist."** 371 of 522 private ventures have no
 disclosed valuation, and non-US companies disclose far less. Comparing regions on dollar
 totals measures *disclosure practice* as much as activity. Venture counts and emergence
 travel across borders; dollar sums don't.
@@ -201,39 +205,72 @@ Full formulas, worked reasoning and the defensibility notes for each score are i
   three-company floor below which neither is computed.
 - **Momentum** — `log2(recent / prior)`, deliberately logarithmic: raw percentages
   produced readings like "+5576%" when a niche grew from near-zero.
+- **Acceleration** — momentum now minus momentum six months ago. Catches a theme that
+  is still growing but slowing, before the totals turn.
+- **Cadence** — median months between a company's consecutive rounds. Shortening
+  cadence means investors are competing to get back in.
 - **Proxy quality (0–5)** — how faithfully listed markets track the private thesis.
+
+---
+
+## The dataset
+
+Seven tables, stored as CSV so every edit is a readable one-line diff:
+
+```
+regions ─< hubs ─< ventures >─ themes
+   │                  │
+   └──< backers ─< positions >┘
+                      ventures ─< rounds
+```
+
+[`dataset/schema.sql`](dataset/schema.sql) declares the keys and constraints.
+[`tools/build_sqlite.py`](tools/build_sqlite.py) loads the CSVs into SQLite and **fails
+on any broken reference**: an unknown hub, a position naming a backer who doesn't exist,
+a maturity outside 1–7. CI runs it on every push and publishes `pre-consensus.sqlite` as
+a build artifact. The schema ships with views for the common questions:
+
+```sql
+SELECT theme, backers, builders, funds FROM theme_conviction;      -- people, not dollars
+SELECT * FROM theme_capital_by_year WHERE theme_id = 'robotics';   -- momentum by year
+SELECT month, venture, amount_usd_m FROM rounds_dated ORDER BY year_frac DESC LIMIT 10;
+```
+
+Column definitions and caveats are in the [data dictionary](dataset/README.md).
 
 ---
 
 ## Repository layout
 
 ```
+├── dataset/                  the source of truth
+│   ├── *.csv                 themes, regions, hubs, backers, ventures, positions, rounds
+│   ├── schema.sql            keys, constraints and analysis views
+│   └── README.md             data dictionary
 ├── src/
 │   ├── app.html              markup, CSS, all application logic
 │   └── data/
-│       ├── core.js           themes, operators, roles, geography, headline ventures
-│       ├── seedlings.js      funds and smaller ventures
-│       ├── regional.js       the eight-region research layer, with provenance fields
-│       ├── seed-rounds.js    94 verified pre-seed and seed rounds
-│       └── niches.js         niche taxonomy, classification rules, exposure map
+│       ├── reference.js      role weights, sectors, map outlines, listed exposure
+│       └── niches.js         niche taxonomy, classification rules
+├── tools/
+│   └── build_sqlite.py       CSV -> SQLite, enforcing every key (stdlib only)
 ├── docs/
 │   └── sourcing-notes.md     per-company confidence rationale and sourcing trail
-├── build.ps1                 concatenates the layers into one self-contained file
+├── build.ps1                 builds the dashboard into one self-contained file
 ├── METHODOLOGY.md            every score, formula and caveat
 └── build/                    generated, git-ignored
 ```
 
-Data layers load in order — `core.js` defines the themes, hubs and regions that later
-layers reference by id.
-
 ### Build
 
 ```powershell
-./build.ps1
+./build.ps1                       # dashboard -> build/index.html
+python tools/build_sqlite.py      # database  -> build/pre-consensus.sqlite
 ```
 
-Emits `build/radar.html` (open locally) and `build/radar.body.html` (for publishing).
-No dependencies, no package manager, no install step.
+`build.ps1` reads the CSVs, injects them into the page as a typed-on-read table set,
+and emits `build/index.html` (open locally) and `build/radar.body.html` (for publishing).
+Neither step needs a package manager or an install.
 
 ---
 
@@ -254,14 +291,14 @@ hosts, no data API. That constraint shaped the whole codebase:
 
 ## Verifying the data
 
-The dataset is plain JavaScript object literals, deliberately readable rather than
-minified. `docs/sourcing-notes.md` carries the per-company reasoning, including why each
-low-confidence valuation is flagged.
+The dataset is plain CSV, readable on GitHub and in any spreadsheet. `docs/sourcing-notes.md`
+carries the per-company reasoning, including why each low-confidence valuation is flagged.
 
 If you find an error, open an issue with the source. Corrections already applied from
 exactly that kind of challenge: Nscale $3B → **$14.6B**, AMI Labs New York → **Paris**,
 Sierra ~$10B → **$15.8B**, and Palmer Luckey reclassified from operator to *board member*
-at Erebor.
+at Erebor. Moving to keyed tables also surfaced three companies recorded twice (Unitree,
+AgiBot, Galbot), now merged.
 
 ---
 

@@ -1,0 +1,17 @@
+id,name,hue,public_proxy,blurb
+energy,Energy & Fusion,#f0a53c,1,"Intelligence is bottlenecked on electricity. The people building the models are personally funding the power to run them — fusion, factory-built fission, geothermal and thermal storage sited next to data centres."
+capital,Capital Rails & Markets,#e0b878,1,"Payments, corporate spend, prediction markets, and a chartered bank purpose-built to lend against AI chips and private stock. Founders building the plumbing their own ecosystem runs on."
+compute,Compute & Silicon,#a8b53c,1,"The picks and shovels of the current paradigm: transformer-specific ASICs, sovereign GPU clouds, and vertically integrated power-plus-datacentre builders."
+health,Preventive Health,#8fc46b,0,"Continuous measurement of healthy people rather than episodic treatment of sick ones. Small, young, and almost entirely founder-built — the consumer-facing edge of the longevity thesis."
+longevity,Longevity & Reprogramming,#5fd39a,0,"Partial epigenetic reprogramming to reverse cellular age. Funded off tech founders' personal balance sheets rather than pharma, and now entering first human trials."
+science,AI for Science,#4fd6b0,0,"Closing the loop between hypothesis and experiment — automated laboratories where models propose, robots run, and results retrain the model overnight. The bet that AI's real prize is discovery, not chat."
+robotics,Physical AI & Robotics,#2fb8c9,1,Foundation models for bodies. The West is pricing the general-purpose control layer; China is shipping roughly nine in ten of the world's actual humanoid units.
+mobility,Autonomy & Mobility,#6cb6e8,1,"Ground autonomy, finally shipping at scale. Capital has consolidated hard into a few winners while the long tail pivots to licensing its stack."
+world,World Models & Simulation,#7aa2f7,0,Systems that model physical reality rather than text. The clearest 2026 thesis shift — the argument that language was a detour and the next layer worth owning is a simulator of the world.
+orbital,Orbital Industry,#9aa6c9,1,"Space as an industrial site rather than a destination — reusable lift, orbital logistics, pharmaceutical manufacturing, power beamed down, and now the argument that data centres belong off-planet."
+frontier,Frontier Intelligence,#9b8cff,1,"The model labs. The two most valuable private companies on earth sit here, and a Chinese open-weight front rank has arrived at a fraction of the price."
+software,AI-Native Software,#b98ae0,1,Applications assumed to be commodity two years ago that turned out to have the fastest revenue ramps in software history. The operators' most conventional bets.
+postdigital,Post-Digital Compute,#d456c0,1,"Machines that abandon deterministic digital logic altogether — thermodynamic sampling, analog in-memory compute, photonic quantum. Tiny cheques, government interest, and no consensus on which physics wins."
+neuro,Neural Interface,#e07ab8,0,"Bandwidth between brains and machines. Split between invasive implants with patients today and non-invasive bets that the interface should be chemical or acoustic, not surgical."
+defense,Defence & Autonomy,#e0654f,1,"Software-defined weapons, autonomous vessels and hypersonics. The most politically loaded theme on the board and the fastest-compounding by valuation — now with a European champion."
+earth,Earth Systems,#d98452,0,"Deliberate intervention in planetary systems — AI-guided mineral discovery, reinvented cement, and the first commercial attempts at dimming the sun. The most contested theme here, and the least capitalised."

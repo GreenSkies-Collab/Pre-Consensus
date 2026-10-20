@@ -8,6 +8,48 @@ scores are computed, not just what the page looks like.
 
 ---
 
+## v24 — Relational dataset, momentum derivatives, renamed Pre-Consensus — October 2026
+
+**Method change.** The data is now a database rather than code.
+
+- The entity data moved out of five JavaScript files into **seven keyed CSV tables** in
+  `dataset/`: themes, regions, hubs, backers, ventures, positions, rounds.
+  `dataset/schema.sql` declares their keys and constraints. `build.ps1` builds the page
+  from the CSVs. What stays in `src/data/` is configuration that isn't tabular (role
+  weights, niche rules, map outlines, listed exposure).
+- Funding rounds used to be nested arrays inside each venture. They are now their own
+  table. Roles and stakes, previously split between a `ROLES` map and per-venture
+  `backers` arrays, are now one `positions` table.
+- **`tools/build_sqlite.py`** loads everything into SQLite and fails on any broken key.
+  CI runs it on every push and publishes `pre-consensus.sqlite` beside the page.
+- **Three duplicates found and merged.** Primary keys exposed that Unitree, AgiBot and
+  Galbot had each been recorded twice, once as headline profiles and once in the
+  regional research. The duplicate AgiBot even shared an id, so the old lookup map
+  silently kept the regional row. Merged rows keep the headline narrative and dated
+  rounds and take the regional layer's graded valuation and provenance, which carry
+  sourcing notes. Effect: ventures 527 → **524**, tracked value $3.25T → **$3.23T**,
+  Robotics companies 70 → 67 and $135B → $117B. Robotics emergence moves 46 → 47.
+  Conviction counts are unchanged, because backers were unioned.
+- Verified by running old and new builds in a headless browser and diffing the full data
+  model and the rendered text of all nine views. The only differences are those above.
+
+**Momentum view** gains two sections below the lanes:
+
+- A **signal table** per theme: trailing-twelve-month capital, momentum as a multiple,
+  **acceleration** (momentum now against six months ago), **cadence** (median months
+  between a company's rounds), median round, sample size, and a rolling T12M sparkline.
+  The table can be sorted, and ⚠ marks themes too thin to read.
+- A **round tape** listing all 203 dated rounds newest first, each with its step-up against the
+  company's previous round, filterable by theme.
+
+**Also**
+
+- Renamed **Founder Radar → Pre-Consensus**.
+- Fixed the CI parse check, which required the bundle to *end* in `</script>` and so
+  could never pass against the full page.
+
+---
+
 ## Repository tidy-up — October 2026
 
 Prepared the project for publication as a repository rather than a working folder.
