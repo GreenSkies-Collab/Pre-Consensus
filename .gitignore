@@ -7,9 +7,9 @@ build/
 #   dist/                   stale copies of the build output
 #   founder-radar*.zip      hand-made archives, superseded by git
 
-# Local tool config — machine-specific permissions, not project settings.
-# CLAUDE.md is committed deliberately: it documents the project's conventions.
-.claude/settings.local.json
+# Local Claude Code context and settings — personal working notes, not project files.
+CLAUDE.md
+.claude/
 
 # Editors / OS
 .vscode/
